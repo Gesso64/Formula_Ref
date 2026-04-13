@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { FormulaCard } from '@/components/cards/FormulaCard'
 import { InterestTable } from '@/components/cards/InterestTable'
 import { CardEditor } from '@/components/cards/CardEditor'
@@ -10,6 +10,7 @@ export function CardGrid() {
   const { activeCourse } = useCourses()
   const [search, setSearch] = useState('')
   const [activeCat, setActiveCat] = useState('all')
+  useEffect(() => { setActiveCat('all') }, [activeCourse?.id])
   const [editCard, setEditCard] = useState<{ card?: Card; section: Section } | null>(null)
   const [editSection, setEditSection] = useState<{ section?: Section; order: number } | null>(null)
 

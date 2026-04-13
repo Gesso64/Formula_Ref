@@ -29,14 +29,21 @@ export function CoursesProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     async function init() {
-      let stored = await storage.getCourses()
-      if (stored.length === 0) {
-        for (const c of DEFAULT_COURSES) await storage.upsertCourse(c)
-        stored = await storage.getCourses()
+      // Sync default courses only when their defaultVersion is higher than what
+      // is stored, so user edits to default cards are preserved between reloads.
+      // Custom courses (isDefault: false, random UUIDs) are never touched.
+      const stored = await storage.getCourses()
+      const storedById = Object.fromEntries(stored.map(c => [c.id, c]))
+      for (const c of DEFAULT_COURSES) {
+        const storedVersion = storedById[c.id]?.defaultVersion ?? 0
+        if ((c.defaultVersion ?? 0) > storedVersion) {
+          await storage.upsertCourse(c)
+        }
       }
+      const synced = await storage.getCourses()
       const meta = await storage.getMeta()
-      setCourses(stored)
-      setActiveCourseIdState(meta.activeCourseId ?? stored[0]?.id ?? null)
+      setCourses(synced)
+      setActiveCourseIdState(meta.activeCourseId ?? synced[0]?.id ?? null)
       setLoading(false)
     }
     init()
@@ -64,23 +71,26 @@ export function CoursesProvider({ children }: { children: React.ReactNode }) {
   }, [activeCourseId])
 
   const upsertSection = useCallback(async (courseId: string, section: Section) => {
-    const course = courses.find(c => c.id === courseId)
+    const all = await storage.getCourses()
+    const course = all.find(c => c.id === courseId)
     if (!course) return
     const idx = course.sections.findIndex(s => s.id === section.id)
     const sections = idx >= 0
       ? course.sections.map(s => s.id === section.id ? section : s)
       : [...course.sections, section]
     await upsertCourse({ ...course, sections })
-  }, [courses, upsertCourse])
+  }, [upsertCourse])
 
   const deleteSection = useCallback(async (courseId: string, sectionId: string) => {
-    const course = courses.find(c => c.id === courseId)
+    const all = await storage.getCourses()
+    const course = all.find(c => c.id === courseId)
     if (!course) return
     await upsertCourse({ ...course, sections: course.sections.filter(s => s.id !== sectionId) })
-  }, [courses, upsertCourse])
+  }, [upsertCourse])
 
   const upsertCard = useCallback(async (courseId: string, sectionId: string, card: Card) => {
-    const course = courses.find(c => c.id === courseId)
+    const all = await storage.getCourses()
+    const course = all.find(c => c.id === courseId)
     if (!course) return
     const sections = course.sections.map(s => {
       if (s.id !== sectionId) return s
@@ -89,16 +99,17 @@ export function CoursesProvider({ children }: { children: React.ReactNode }) {
       return { ...s, cards }
     })
     await upsertCourse({ ...course, sections })
-  }, [courses, upsertCourse])
+  }, [upsertCourse])
 
   const deleteCard = useCallback(async (courseId: string, sectionId: string, cardId: string) => {
-    const course = courses.find(c => c.id === courseId)
+    const all = await storage.getCourses()
+    const course = all.find(c => c.id === courseId)
     if (!course) return
     const sections = course.sections.map(s =>
       s.id !== sectionId ? s : { ...s, cards: s.cards.filter(c => c.id !== cardId) }
     )
     await upsertCourse({ ...course, sections })
-  }, [courses, upsertCourse])
+  }, [upsertCourse])
 
   const exportAll = useCallback(async () => {
     const data = await storage.exportAll()
@@ -110,10 +121,15 @@ export function CoursesProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const importAll = useCallback(async (file: File) => {
-    const text = await file.text()
-    const data = JSON.parse(text)
-    await storage.importAll(data)
-    setCourses(await storage.getCourses())
+    try {
+      const text = await file.text()
+      const data = JSON.parse(text)
+      if (!Array.isArray(data?.courses)) throw new Error('Invalid backup: missing "courses" array.')
+      await storage.importAll(data)
+      setCourses(await storage.getCourses())
+    } catch (err) {
+      alert(`Import failed: ${err instanceof Error ? err.message : String(err)}`)
+    }
   }, [])
 
   const activeCourse = courses.find(c => c.id === activeCourseId) ?? courses[0] ?? null

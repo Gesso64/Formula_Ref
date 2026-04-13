@@ -79,7 +79,6 @@ export function FormulaCard({ card, onEdit }: Props) {
         />
       )}
 
-      <style>{`.card-root:hover .edit-btn { opacity: 1 !important; }`}</style>
     </div>
   )
 }

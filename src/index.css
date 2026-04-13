@@ -39,6 +39,8 @@ body {
 .katex-display { overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
 .katex { font-size: 1em; }
 
+.card-root:hover .edit-btn { opacity: 1 !important; }
+
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--color-border2); border-radius: 4px; }

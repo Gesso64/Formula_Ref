@@ -15,7 +15,7 @@ export const DEFAULT_COURSES: Course[] = [
     description: 'Chapters 15–30 · Serway & Jewett, 9th edition',
     accent: '#1d4ed8', accentBg: '#dbeafe', accentFg: '#1e3a8a',
     accentBgDark: '#1e3a5f', accentFgDark: '#93c5fd',
-    isDefault: true,
+    isDefault: true, defaultVersion: 1,
     createdAt: '2026-01-01T00:00:00Z',
     updatedAt: '2026-01-01T00:00:00Z',
     sections: [
@@ -29,9 +29,12 @@ export const DEFAULT_COURSES: Course[] = [
               { symbol: 'G', value: '6.674 × 10⁻¹¹ N·m²/kg²', quantity: 'Gravitational constant' },
               { symbol: 'kₑ', value: '8.988 × 10⁹ N·m²/C²', quantity: 'Coulomb constant' },
               { symbol: 'e', value: '1.602 × 10⁻¹⁹ C', quantity: 'Elementary charge' },
+              { symbol: 'eV', value: '1.602 × 10⁻¹⁹ J', quantity: 'Electron volt' },
               { symbol: 'mₑ', value: '9.109 × 10⁻³¹ kg', quantity: 'Electron mass' },
+              { symbol: 'mₚ', value: '1.673 × 10⁻²⁷ kg', quantity: 'Proton mass' },
               { symbol: 'ε₀', value: '8.854 × 10⁻¹² C²/(N·m²)', quantity: 'Permittivity of free space' },
               { symbol: 'μ₀', value: '4π × 10⁻⁷ T·m/A', quantity: 'Permeability of free space' },
+              { symbol: 'ρ_air', value: '1.2 kg/m³', quantity: 'Density of air' },
               { symbol: 'I₀', value: '10⁻¹² W/m²', quantity: 'Threshold of hearing' },
             ]
           },
@@ -410,7 +413,7 @@ export const DEFAULT_COURSES: Course[] = [
     description: 'Labs 1–10 · Strang & Herman Vol. 2 & 3',
     accent: '#7c3aed', accentBg: '#ede9fe', accentFg: '#4c1d95',
     accentBgDark: '#2e1065', accentFgDark: '#c4b5fd',
-    isDefault: true,
+    isDefault: true, defaultVersion: 1,
     createdAt: '2026-01-01T00:01:00Z',
     updatedAt: '2026-01-01T00:01:00Z',
     sections: [
@@ -630,7 +633,7 @@ export const DEFAULT_COURSES: Course[] = [
     description: 'Chapters 2–5, 9, 12, 14, 16, 17 · Callister & Rethwisch, 10th ed.',
     accent: '#b45309', accentBg: '#fef3c7', accentFg: '#78350f',
     accentBgDark: '#451a03', accentFgDark: '#fcd34d',
-    isDefault: true,
+    isDefault: true, defaultVersion: 1,
     createdAt: '2026-01-01T00:02:00Z',
     updatedAt: '2026-01-01T00:02:00Z',
     sections: [
@@ -793,7 +796,7 @@ export const DEFAULT_COURSES: Course[] = [
     description: 'Fraser et al., Engineering Economics, 7th edition',
     accent: '#059669', accentBg: '#d1fae5', accentFg: '#064e3b',
     accentBgDark: '#022c22', accentFgDark: '#6ee7b7',
-    isDefault: true,
+    isDefault: true, defaultVersion: 1,
     createdAt: '2026-01-01T00:03:00Z',
     updatedAt: '2026-01-01T00:03:00Z',
     sections: [
