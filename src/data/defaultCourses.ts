@@ -137,6 +137,17 @@ export const DEFAULT_COURSES: Course[] = [
             formula: '\\Delta\\phi = \\frac{2\\pi}{\\lambda}\\,|r_2 - r_1|', formulaDisplay: true,
             notes: 'Constructive if Δφ = 2πm; destructive if Δφ = π(2m+1).'
           },
+          { id: cid(), order: 7, tag: 'Superposition', tagBg: '#E0F2FE', tagColor: '#0369a1', title: 'Superposition of two sinusoidal waves',
+            formula: 'y_1+y_2 = 2A\\cos\\!\\left(\\frac{\\phi_1-\\phi_2}{2}\\right)\\sin\\!\\left[kx-\\omega t+\\frac{\\phi_1+\\phi_2}{2}\\right]', formulaDisplay: true,
+            notes: 'Resultant amplitude is 2A cos((φ₁−φ₂)/2). Constructive when φ₁−φ₂ = 0; destructive when φ₁−φ₂ = π.'
+          },
+          { id: cid(), order: 8, tag: 'Sound', tagBg: '#E0F2FE', tagColor: '#0369a1', title: 'Displacement wave & bulk modulus',
+            subs: [
+              { latex: 's(x,t) = s_{max}\\cos(kx-\\omega t)' },
+              { latex: 'B = -\\dfrac{\\Delta P}{\\Delta V/V_i}' },
+            ],
+            notes: '<strong>s</strong> = displacement of air molecules. <strong>B</strong> = bulk modulus. Pressure and displacement waves are 90° out of phase.'
+          },
         ]
       },
       {
@@ -158,14 +169,29 @@ export const DEFAULT_COURSES: Course[] = [
             formula: 'f_{\\text{beat}} = |f_1 - f_2|', formulaDisplay: true,
             notes: 'Used in instrument tuning.'
           },
+          { id: cid(), order: 4, tag: 'Pressure', tagBg: '#DBEAFE', tagColor: '#1e40af', title: 'Pressure amplitude',
+            formula: '\\Delta P_{max} = \\rho v \\omega s_{max}', formulaDisplay: true,
+            notes: 'Maximum pressure variation in a sound wave. ρ = air density, v = wave speed.'
+          },
+          { id: cid(), order: 5, tag: 'Intensity', tagBg: '#DBEAFE', tagColor: '#1e40af', title: 'Intensity — from pressure & from power',
+            subs: [
+              { latex: 'I = \\dfrac{\\Delta P^2_{max}}{2\\rho v}' },
+              { latex: 'I = \\dfrac{\\text{Power}}{A} = \\dfrac{\\text{Power}}{4\\pi r^2}' },
+              { latex: '\\text{Power}_{avg} = \\dfrac{\\rho A\\omega^2 s^2_{max}\\,v}{2}' },
+            ],
+            notes: 'All three expressions for intensity are equivalent. A in Power/A is cross-sectional area.'
+          },
         ]
       },
       {
         id: sid(), label: 'Gravity & Gravitational Field (Ch. 13)', cat: 'grav', order: 4,
         cards: [
           { id: cid(), order: 0, tag: 'Gravity', tagBg: '#F0FDF4', tagColor: '#166534', title: "Newton's law of gravitation",
-            formula: 'F_g = \\frac{Gm_1 m_2}{r^2}', formulaDisplay: true,
-            notes: 'Always attractive. Valid for point masses or spherically symmetric bodies.'
+            subs: [
+              { latex: 'F_g = \\dfrac{Gm_1 m_2}{r^2}' },
+              { latex: '\\vec{F} = m\\vec{g};\\quad |\\vec{g}| = \\dfrac{GM}{r^2}' },
+            ],
+            notes: 'Always attractive. Valid for point masses or spherically symmetric bodies. <strong>g</strong> = local gravitational field strength.'
           },
           { id: cid(), order: 1, tag: 'Potential', tagBg: '#F0FDF4', tagColor: '#166534', title: 'Gravitational potential energy',
             formula: 'U(r) = -\\frac{GMm}{r}', formulaDisplay: true,
@@ -191,9 +217,12 @@ export const DEFAULT_COURSES: Course[] = [
             formula: 'F = k_e\\frac{|q_1||q_2|}{r^2}', formulaDisplay: true,
             notes: 'kₑ = 8.988 × 10⁹ N·m²/C². Superposition applies.'
           },
-          { id: cid(), order: 1, tag: 'E-Field', tagBg: '#FEF3C7', tagColor: '#92400e', title: 'E-field from point charge',
-            formula: 'E = k_e\\frac{|q|}{r^2}', formulaDisplay: true,
-            notes: 'Direction: outward from +, inward to −.'
+          { id: cid(), order: 1, tag: 'E-Field', tagBg: '#FEF3C7', tagColor: '#92400e', title: 'E-field — point charge & continuous distribution',
+            subs: [
+              { latex: 'E = k_e\\dfrac{|q|}{r^2}\\quad\\text{[point charge]}' },
+              { latex: '\\vec{E} = k_e\\int\\dfrac{dq}{r^2}\\,\\hat{r}\\quad\\text{[continuous]}' },
+            ],
+            notes: 'Direction: outward from +, inward to −. For continuous distributions, integrate over the charge distribution.'
           },
           { id: cid(), order: 2, tag: 'Plane', tagBg: '#FEF3C7', tagColor: '#92400e', title: 'E-field — infinite plane',
             formula: '|E| = \\frac{\\sigma}{2\\varepsilon_0}', formulaDisplay: true,
@@ -249,7 +278,15 @@ export const DEFAULT_COURSES: Course[] = [
             ],
             notes: 'E = −∇V. E points from high V toward low V.'
           },
-          { id: cid(), order: 2, tag: 'Capacitor', tagBg: '#FCEEF8', tagColor: '#7e22ce', title: 'Parallel-plate capacitor',
+          { id: cid(), order: 2, tag: 'Potential', tagBg: '#FCEEF8', tagColor: '#7e22ce', title: 'Potential difference & work',
+            subs: [
+              { latex: 'V_B - V_A = -\\vec{E}\\cdot\\vec{r}_{AB} = -El\\cos\\theta = -Ed' },
+              { latex: 'U_B - U_A = q(V_B - V_A) = -W^{\\text{Field}}_{A\\to B}' },
+              { latex: 'W^{\\text{Field}}_{A\\to B} = \\int_A^B \\vec{F}\\cdot d\\vec{r}' },
+            ],
+            notes: 'For uniform field: V_B − V_A = −Ed where d is displacement along field. Work done by the field equals the negative change in PE.'
+          },
+          { id: cid(), order: 3, tag: 'Capacitor', tagBg: '#FCEEF8', tagColor: '#7e22ce', title: 'Parallel-plate capacitor',
             subs: [
               { latex: 'C = \\dfrac{Q}{|\\Delta V|}' },
               { latex: 'C = \\varepsilon_0\\dfrac{A}{d}' },
@@ -280,7 +317,11 @@ export const DEFAULT_COURSES: Course[] = [
             ],
             notes: 'For 2 parallel: R_par = R₁R₂/(R₁+R₂).'
           },
-          { id: cid(), order: 3, tag: 'RC', tagBg: '#FFF1F2', tagColor: '#9f1239', title: 'RC circuits',
+          { id: cid(), order: 3, tag: 'Current', tagBg: '#FFF1F2', tagColor: '#9f1239', title: 'Current — drift velocity',
+            formula: 'I_{avg} = nqv_d A', formulaDisplay: true,
+            notes: '<strong>n</strong> = charge carrier density (m⁻³), <strong>v_d</strong> = drift velocity, <strong>A</strong> = cross-sectional area.'
+          },
+          { id: cid(), order: 4, tag: 'RC', tagBg: '#FFF1F2', tagColor: '#9f1239', title: 'RC circuits',
             subs: [
               { latex: 'q(t) = C\\mathcal{E}\\left(1-e^{-t/RC}\\right)\\;\\text{[charging]}' },
               { latex: 'q(t) = Q_0\\,e^{-t/RC}\\;\\text{[discharging]}' },
@@ -309,15 +350,52 @@ export const DEFAULT_COURSES: Course[] = [
           },
           { id: cid(), order: 3, tag: 'B-Fields', tagBg: '#E0F2FE', tagColor: '#075985', title: 'B-fields — special cases',
             subs: [
-              { latex: 'B = \\dfrac{\\mu_0 I}{2\\pi a}\\quad\\text{[long wire]}' },
-              { latex: 'B = \\dfrac{\\mu_0 I}{2a}\\quad\\text{[loop centre]}' },
+              { latex: 'B = \\dfrac{\\mu_0 I}{2\\pi a}\\quad\\text{[long wire, dist. }a\\text{]}' },
+              { latex: 'B = \\dfrac{\\mu_0 I\\theta}{4\\pi a}\\quad\\text{[arc, radius }a\\text{, angle }\\theta\\text{]}' },
+              { latex: 'B = \\dfrac{\\mu_0 I a^2}{2(a^2+x^2)^{3/2}}\\quad\\text{[loop axis, dist. }x\\text{]}' },
+              { latex: 'B = \\dfrac{\\mu_0 I}{2a}\\quad\\text{[loop centre, }x=0\\text{]}' },
               { latex: 'B = \\mu_0 nI\\quad\\text{[solenoid inside]}' },
             ],
-            notes: 'Use right-hand rule for direction.'
+            notes: 'Use right-hand rule for direction. Arc formula: θ in radians. Loop-axis at x=0 reduces to μ₀I/(2a).'
           },
           { id: cid(), order: 4, tag: 'Ampere', tagBg: '#E0F2FE', tagColor: '#075985', title: "Ampère's law",
             formula: '\\oint\\vec{B}\\cdot d\\vec{s} = \\mu_0 I_{\\text{enc}}', formulaDisplay: true,
             notes: 'Choose Amperian loop where B is constant and tangential.'
+          },
+          { id: cid(), order: 5, tag: 'Lorentz', tagBg: '#F0F9FF', tagColor: '#0c4a6e', title: 'Lorentz force (combined E & B)',
+            formula: '\\vec{F} = q\\vec{E} + q\\vec{v}\\times\\vec{B}', formulaDisplay: true,
+            notes: 'Full force on a charge moving through both electric and magnetic fields.'
+          },
+          { id: cid(), order: 6, tag: 'Force', tagBg: '#F0F9FF', tagColor: '#0c4a6e', title: 'Force on current-carrying wire',
+            formula: '\\vec{F} = I\\vec{L}\\times\\vec{B}\\quad |F| = BIL\\sin\\theta', formulaDisplay: true,
+            notes: '<strong>L</strong> = length vector in direction of current. θ = angle between wire and B.'
+          },
+          { id: cid(), order: 7, tag: 'Parallel', tagBg: '#F0F9FF', tagColor: '#0c4a6e', title: 'Force between parallel wires',
+            formula: '\\frac{F_B}{L} = \\frac{\\mu_0 I_1 I_2}{2\\pi a}', formulaDisplay: true,
+            notes: 'Parallel currents attract; antiparallel currents repel. a = separation between wires.'
+          },
+          { id: cid(), order: 8, tag: 'Hall', tagBg: '#F0F9FF', tagColor: '#0c4a6e', title: 'Hall voltage',
+            formula: 'V_H = \\frac{IB}{nqt}', formulaDisplay: true,
+            notes: '<strong>n</strong> = charge carrier density, <strong>t</strong> = thickness of conductor perpendicular to B. Used to determine carrier type and density.'
+          },
+        ]
+      },
+      {
+        id: sid(), label: 'Math Identities', cat: 'math-id', order: 10,
+        cards: [
+          { id: cid(), order: 0, tag: 'Trig', tagBg: '#F3F4F6', tagColor: '#374151', title: 'Sine addition & sum-to-product',
+            subs: [
+              { latex: '\\sin(a\\pm b) = \\sin a\\cos b \\pm \\cos a\\sin b' },
+              { latex: '\\sin a \\pm \\sin b = 2\\cos\\!\\left(\\frac{a\\mp b}{2}\\right)\\sin\\!\\left(\\frac{a\\pm b}{2}\\right)' },
+            ],
+            notes: 'Sum-to-product identity is used to derive superposition results for waves.'
+          },
+          { id: cid(), order: 1, tag: 'Vectors', tagBg: '#F3F4F6', tagColor: '#374151', title: 'Cross & dot product magnitudes',
+            subs: [
+              { latex: '|\\vec{A}\\times\\vec{B}| = |\\vec{A}||\\vec{B}|\\sin\\theta' },
+              { latex: '\\vec{A}\\cdot\\vec{B} = |\\vec{A}||\\vec{B}|\\cos\\theta' },
+            ],
+            notes: 'Cross product is perpendicular to both vectors (right-hand rule). Dot product is zero for perpendicular vectors.'
           },
         ]
       },
