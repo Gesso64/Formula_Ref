@@ -49,8 +49,27 @@ export interface Course {
   _defaultHash?: string;
   createdAt: string;
   updatedAt: string;
+  examples?: WorkedExample[];
 }
 
 export interface AppMeta {
   activeCourseId: string | null;
+}
+
+export interface ExampleStep {
+  text?: string;
+  latex?: string;
+  displayMode?: boolean;
+}
+
+export interface WorkedExample {
+  id: string;
+  number: number;
+  title: string;
+  source: string;
+  topics: string[];
+  given: string[];
+  steps: ExampleStep[];
+  answer: string;
+  interpretation?: string;
 }

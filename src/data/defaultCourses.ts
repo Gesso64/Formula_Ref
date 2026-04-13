@@ -1,4 +1,5 @@
 import type { Course } from '@/types'
+import { PCS125_W18_EXAMPLES } from './pcs125Examples'
 
 // Helper to make a card id deterministic
 let _cid = 0
@@ -402,7 +403,8 @@ export const DEFAULT_COURSES: Course[] = [
           },
         ]
       },
-    ]
+    ],
+    examples: PCS125_W18_EXAMPLES,
   },
 
   // ─── MTH240 ────────────────────────────────────────────────────────────────
