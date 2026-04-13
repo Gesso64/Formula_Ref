@@ -46,7 +46,7 @@ export interface Course {
   accentFgDark: string;
   sections: Section[];
   isDefault: boolean;
-  defaultVersion?: number;
+  _defaultHash?: string;
   createdAt: string;
   updatedAt: string;
 }

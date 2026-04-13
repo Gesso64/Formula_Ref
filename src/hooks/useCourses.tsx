@@ -22,6 +22,16 @@ interface CoursesCtx {
 
 const Ctx = createContext<CoursesCtx | null>(null)
 
+/** djb2 hash of a default course's content (excludes mutable fields). */
+function hashCourse(course: Course): string {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { updatedAt: _u, _defaultHash: _h, ...rest } = course as Course & { _defaultHash?: string }
+  const s = JSON.stringify(rest)
+  let h = 0
+  for (let i = 0; i < s.length; i++) h = (Math.imul(31, h) + s.charCodeAt(i)) | 0
+  return (h >>> 0).toString(36)
+}
+
 export function CoursesProvider({ children }: { children: React.ReactNode }) {
   const [courses, setCourses] = useState<Course[]>([])
   const [activeCourseId, setActiveCourseIdState] = useState<string | null>(null)
@@ -29,15 +39,15 @@ export function CoursesProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     async function init() {
-      // Sync default courses only when their defaultVersion is higher than what
-      // is stored, so user edits to default cards are preserved between reloads.
+      // Sync default courses only when their content has changed (hash mismatch).
+      // The hash is computed from the course data in code and stored in IDB.
       // Custom courses (isDefault: false, random UUIDs) are never touched.
       const stored = await storage.getCourses()
       const storedById = Object.fromEntries(stored.map(c => [c.id, c]))
       for (const c of DEFAULT_COURSES) {
-        const storedVersion = storedById[c.id]?.defaultVersion ?? 0
-        if ((c.defaultVersion ?? 0) > storedVersion) {
-          await storage.upsertCourse(c)
+        const codeHash = hashCourse(c)
+        if (storedById[c.id]?._defaultHash !== codeHash) {
+          await storage.upsertCourse({ ...c, _defaultHash: codeHash })
         }
       }
       const synced = await storage.getCourses()
