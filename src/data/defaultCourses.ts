@@ -85,19 +85,23 @@ export const DEFAULT_COURSES: Course[] = [
               { latex: 'K = \\tfrac{1}{2}mv^2 = \\tfrac{1}{2}k(A^2-x^2)' },
               { latex: 'U = \\tfrac{1}{2}kx^2' },
             ],
-            notes: 'Total mechanical energy E is constant. K + U = E always.'
+            notes: 'Total mechanical energy E is constant. K + U = E always.',
+            exampleIds: ['pcs125-supp-q1'],
           },
           { id: cid(), order: 4, tag: 'Velocity', tagBg: '#EEF0FB', tagColor: '#3730a3', title: 'Speed as function of position',
             formula: 'v = \\pm\\,\\omega\\sqrt{A^2 - x^2}', formulaDisplay: true,
-            notes: 'Derived from energy conservation. Maximum speed v_max = Aω at x = 0.'
+            notes: 'Derived from energy conservation. Maximum speed v_max = Aω at x = 0.',
+            exampleIds: ['pcs125-supp-q2'],
           },
           { id: cid(), order: 5, tag: 'Damped', tagBg: '#E0E7FF', tagColor: '#312e81', title: 'Damped oscillation',
             formula: 'x(t) = Ae^{-bt/2m}\\cos(\\omega_d t + \\phi)', formulaDisplay: true,
-            notes: '<strong>b</strong> = damping coefficient. Amplitude decays exponentially. Underdamped when b² < 4mk.'
+            notes: '<strong>b</strong> = damping coefficient. Amplitude decays exponentially. Underdamped when b² < 4mk.',
+            exampleIds: ['pcs125-supp-q3'],
           },
           { id: cid(), order: 6, tag: 'Damped', tagBg: '#E0E7FF', tagColor: '#312e81', title: 'Damped angular frequency',
             formula: '\\omega_d = \\sqrt{\\omega_0^2 - \\left(\\frac{b}{2m}\\right)^2}', formulaDisplay: true,
-            notes: 'At critical damping ωd → 0.'
+            notes: 'At critical damping ωd → 0.',
+            exampleIds: ['pcs125-supp-q3'],
           },
           { id: cid(), order: 7, tag: 'Driven', tagBg: '#E0E7FF', tagColor: '#312e81', title: 'Driven oscillation amplitude',
             formula: 'A = \\frac{F_0/m}{\\sqrt{(\\omega^2-\\omega_0^2)^2+(b\\omega/m)^2}}', formulaDisplay: true,
@@ -116,6 +120,7 @@ export const DEFAULT_COURSES: Course[] = [
               { latex: 'v_y = \\dfrac{\\partial y}{\\partial t}\\quad\\text{[transverse particle velocity]}' },
             ],
             notes: '<strong>k</strong> = wave number (rad/m), <strong>λ</strong> = wavelength. Transverse particle velocity is the time derivative of the displacement — use it to find phase constants.',
+            exampleIds: ['pcs125-w18-q3'],
           },
           { id: cid(), order: 1, tag: 'Wave', tagBg: '#E0F2FE', tagColor: '#0369a1', title: 'Travelling wave equation',
             subs: [
@@ -136,7 +141,8 @@ export const DEFAULT_COURSES: Course[] = [
           },
           { id: cid(), order: 3, tag: 'Power', tagBg: '#E0F2FE', tagColor: '#0369a1', title: 'Power on string',
             formula: 'P = \\tfrac{1}{2}\\mu\\omega^2 A^2 v', formulaDisplay: true,
-            notes: 'Power ∝ A² and ∝ ω².'
+            notes: 'Power ∝ A² and ∝ ω².',
+            exampleIds: ['pcs125-supp-q4'],
           },
           { id: cid(), order: 4, tag: 'Standing', tagBg: '#E0F2FE', tagColor: '#0369a1', title: 'Standing waves',
             formula: 'y = 2A\\sin(kx)\\cos(\\omega t)', formulaDisplay: true,
@@ -154,11 +160,13 @@ export const DEFAULT_COURSES: Course[] = [
           },
           { id: cid(), order: 6, tag: 'Phase', tagBg: '#E0F2FE', tagColor: '#0369a1', title: 'Phase difference from path difference',
             formula: '\\Delta\\phi = \\frac{2\\pi}{\\lambda}\\,|r_2 - r_1|', formulaDisplay: true,
-            notes: 'Constructive if Δφ = 2πm; destructive if Δφ = π(2m+1).'
+            notes: 'Constructive if Δφ = 2πm; destructive if Δφ = π(2m+1).',
+            exampleIds: ['pcs125-supp-q5'],
           },
           { id: cid(), order: 7, tag: 'Superposition', tagBg: '#E0F2FE', tagColor: '#0369a1', title: 'Superposition of two sinusoidal waves',
             formula: 'y_1+y_2 = 2A\\cos\\!\\left(\\frac{\\phi_1-\\phi_2}{2}\\right)\\sin\\!\\left[kx-\\omega t+\\frac{\\phi_1+\\phi_2}{2}\\right]', formulaDisplay: true,
-            notes: 'Resultant amplitude is 2A cos((φ₁−φ₂)/2). Constructive when φ₁−φ₂ = 0; destructive when φ₁−φ₂ = π.'
+            notes: 'Resultant amplitude is 2A cos((φ₁−φ₂)/2). Constructive when φ₁−φ₂ = 0; destructive when φ₁−φ₂ = π.',
+            exampleIds: ['pcs125-supp-q5'],
           },
           { id: cid(), order: 8, tag: 'Sound', tagBg: '#E0F2FE', tagColor: '#0369a1', title: 'Displacement wave & bulk modulus',
             subs: [
@@ -189,11 +197,13 @@ export const DEFAULT_COURSES: Course[] = [
           },
           { id: cid(), order: 3, tag: 'Beats', tagBg: '#DBEAFE', tagColor: '#1e40af', title: 'Beat frequency',
             formula: 'f_{\\text{beat}} = |f_1 - f_2|', formulaDisplay: true,
-            notes: 'Used in instrument tuning.'
+            notes: 'Used in instrument tuning.',
+            exampleIds: ['pcs125-supp-q6'],
           },
           { id: cid(), order: 4, tag: 'Pressure', tagBg: '#DBEAFE', tagColor: '#1e40af', title: 'Pressure amplitude',
             formula: '\\Delta P_{max} = \\rho v \\omega s_{max}', formulaDisplay: true,
-            notes: 'Maximum pressure variation in a sound wave. ρ = air density, v = wave speed.'
+            notes: 'Maximum pressure variation in a sound wave. ρ = air density, v = wave speed.',
+            exampleIds: ['pcs125-supp-q7'],
           },
           { id: cid(), order: 5, tag: 'Intensity', tagBg: '#DBEAFE', tagColor: '#1e40af', title: 'Intensity — from pressure & from power',
             subs: [
@@ -201,7 +211,8 @@ export const DEFAULT_COURSES: Course[] = [
               { latex: 'I = \\dfrac{\\text{Power}}{A} = \\dfrac{\\text{Power}}{4\\pi r^2}' },
               { latex: '\\text{Power}_{avg} = \\dfrac{\\rho A\\omega^2 s^2_{max}\\,v}{2}' },
             ],
-            notes: 'All three expressions for intensity are equivalent. A in Power/A is cross-sectional area.'
+            notes: 'All three expressions for intensity are equivalent. A in Power/A is cross-sectional area.',
+            exampleIds: ['pcs125-supp-q7'],
           },
         ]
       },
@@ -231,7 +242,8 @@ export const DEFAULT_COURSES: Course[] = [
               { latex: 'v_{\\text{orb}} = \\sqrt{\\dfrac{GM}{r}}' },
               { latex: 'T^2 = \\dfrac{4\\pi^2}{GM}r^3' },
             ],
-            notes: 'Gravitational force = centripetal force for circular orbit.'
+            notes: 'Gravitational force = centripetal force for circular orbit.',
+            exampleIds: ['pcs125-supp-q8'],
           },
         ]
       },
@@ -253,7 +265,8 @@ export const DEFAULT_COURSES: Course[] = [
           },
           { id: cid(), order: 2, tag: 'Plane', tagBg: '#FEF3C7', tagColor: '#92400e', title: 'E-field — infinite plane',
             formula: '|E| = \\frac{\\sigma}{2\\varepsilon_0}', formulaDisplay: true,
-            notes: 'Uniform, independent of distance.'
+            notes: 'Uniform, independent of distance.',
+            exampleIds: ['pcs125-supp-q9'],
           },
           { id: cid(), order: 3, tag: 'Dipole', tagBg: '#FEF3C7', tagColor: '#92400e', title: 'Electric dipole',
             subs: [
@@ -261,7 +274,8 @@ export const DEFAULT_COURSES: Course[] = [
               { latex: '\\vec{\\tau} = \\vec{p}\\times\\vec{E}' },
               { latex: 'U = -\\vec{p}\\cdot\\vec{E}' },
             ],
-            notes: '<strong>p</strong> points from − to + charge.'
+            notes: '<strong>p</strong> points from − to + charge.',
+            exampleIds: ['pcs125-supp-q10'],
           },
           { id: cid(), order: 4, tag: 'Energy', tagBg: '#FEF3C7', tagColor: '#92400e', title: 'Electric PE — charges',
             subs: [
@@ -286,7 +300,8 @@ export const DEFAULT_COURSES: Course[] = [
           },
           { id: cid(), order: 1, tag: 'Line', tagBg: '#FDE68A', tagColor: '#78350f', title: 'E-field — infinite line charge',
             formula: 'E = \\frac{\\lambda}{2\\pi\\varepsilon_0 r}', formulaDisplay: true,
-            notes: 'Use cylindrical Gaussian surface coaxial with wire.'
+            notes: 'Use cylindrical Gaussian surface coaxial with wire.',
+            exampleIds: ['pcs125-supp-q11'],
           },
           { id: cid(), order: 2, tag: 'Shell', tagBg: '#FDE68A', tagColor: '#78350f', title: 'E-field — spherical shell',
             subs: [
@@ -294,7 +309,8 @@ export const DEFAULT_COURSES: Course[] = [
               { latex: 'E = 0\\quad(r < R)\\;\\text{[hollow shell]}' },
               { latex: 'E = k_e\\dfrac{Qr}{R^3}\\quad(r\\le R)\\;\\text{[solid]}' },
             ],
-            notes: 'Inside hollow shell: E = 0 everywhere.'
+            notes: 'Inside hollow shell: E = 0 everywhere.',
+            exampleIds: ['pcs125-supp-q12'],
           },
         ]
       },
@@ -315,7 +331,8 @@ export const DEFAULT_COURSES: Course[] = [
               { latex: 'E_y = -\\dfrac{\\partial V}{\\partial y}' },
               { latex: 'E_z = -\\dfrac{\\partial V}{\\partial z}' },
             ],
-            notes: 'E = −∇V. E points from high V toward low V.'
+            notes: 'E = −∇V. E points from high V toward low V.',
+            exampleIds: ['pcs125-supp-q13'],
           },
           { id: cid(), order: 2, tag: 'Potential', tagBg: '#FCEEF8', tagColor: '#7e22ce', title: 'Potential difference & work',
             subs: [
@@ -329,10 +346,11 @@ export const DEFAULT_COURSES: Course[] = [
           { id: cid(), order: 3, tag: 'Capacitor', tagBg: '#FCEEF8', tagColor: '#7e22ce', title: 'Parallel-plate capacitor',
             subs: [
               { latex: 'C = \\dfrac{Q}{|\\Delta V|}' },
-              { latex: 'C = \\varepsilon_0\\dfrac{A}{d}' },
+              { latex: 'C = \\varepsilon_0\\dfrac{A}{d}\\quad\\text{(}C = \\kappa\\varepsilon_0\\dfrac{A}{d}\\text{ with dielectric)}' },
               { latex: 'U_C = \\tfrac{1}{2}C(\\Delta V)^2' },
             ],
-            notes: 'With dielectric: C = κε₀A/d.'
+            notes: 'With dielectric κ: capacitance increases by factor κ.',
+            exampleIds: ['pcs125-supp-q14'],
           },
         ]
       },
@@ -344,7 +362,8 @@ export const DEFAULT_COURSES: Course[] = [
               { latex: '\\Delta V = IR' },
               { latex: 'R = \\dfrac{\\rho\\, \\ell}{A}' },
             ],
-            notes: '<strong>ρ</strong> = resistivity, <strong>ℓ</strong> = length, <strong>A</strong> = cross-section.'
+            notes: '<strong>ρ</strong> = resistivity, <strong>ℓ</strong> = length, <strong>A</strong> = cross-section.',
+            exampleIds: ['pcs125-supp-q15'],
           },
           { id: cid(), order: 1, tag: 'Power', tagBg: '#FFF1F2', tagColor: '#9f1239', title: 'Electrical power',
             formula: 'P = I\\Delta V = I^2 R = \\dfrac{(\\Delta V)^2}{R}', formulaDisplay: true,
@@ -356,7 +375,8 @@ export const DEFAULT_COURSES: Course[] = [
               { latex: 'R_{\\text{series}} = R_1+R_2+\\cdots' },
               { latex: '\\dfrac{1}{R_{\\text{par}}} = \\dfrac{1}{R_1}+\\dfrac{1}{R_2}+\\cdots' },
             ],
-            notes: 'For 2 parallel: R_par = R₁R₂/(R₁+R₂).'
+            notes: 'For 2 parallel: R_par = R₁R₂/(R₁+R₂).',
+            exampleIds: ['pcs125-supp-q16'],
           },
           { id: cid(), order: 3, tag: 'Current', tagBg: '#FFF1F2', tagColor: '#9f1239', title: 'Current — drift velocity & charge',
             subs: [
@@ -379,7 +399,8 @@ export const DEFAULT_COURSES: Course[] = [
               { latex: 'q(t) = C\\mathcal{E}\\left(1-e^{-t/RC}\\right)\\;\\text{[charging]}' },
               { latex: 'q(t) = Q_0\\,e^{-t/RC}\\;\\text{[discharging]}' },
             ],
-            notes: '<strong>τ = RC</strong>. At t = τ: 63.2% charged or 36.8% remaining.'
+            notes: '<strong>τ = RC</strong>. At t = τ: 63.2% charged or 36.8% remaining.',
+            exampleIds: ['pcs125-supp-q17'],
           },
         ]
       },
@@ -401,7 +422,8 @@ export const DEFAULT_COURSES: Course[] = [
           },
           { id: cid(), order: 2, tag: 'Biot-Savart', tagBg: '#E0F2FE', tagColor: '#075985', title: 'Biot-Savart law',
             formula: 'dB = \\frac{\\mu_0 I}{4\\pi}\\frac{ds\\sin\\theta}{r^2}', formulaDisplay: true,
-            notes: 'Integrate along the entire current path.'
+            notes: 'Integrate along the entire current path.',
+            exampleIds: ['pcs125-supp-q18'],
           },
           { id: cid(), order: 3, tag: 'B-Fields', tagBg: '#E0F2FE', tagColor: '#075985', title: 'B-fields — special cases',
             subs: [
@@ -416,7 +438,8 @@ export const DEFAULT_COURSES: Course[] = [
           },
           { id: cid(), order: 4, tag: 'Ampere', tagBg: '#E0F2FE', tagColor: '#075985', title: "Ampère's law",
             formula: '\\oint\\vec{B}\\cdot d\\vec{s} = \\mu_0 I_{\\text{enc}}', formulaDisplay: true,
-            notes: 'Choose Amperian loop where B is constant and tangential.'
+            notes: 'Choose Amperian loop where B is constant and tangential.',
+            exampleIds: ['pcs125-supp-q19'],
           },
           { id: cid(), order: 5, tag: 'Lorentz', tagBg: '#F0F9FF', tagColor: '#0c4a6e', title: 'Lorentz force (combined E & B)',
             subs: [
@@ -428,7 +451,8 @@ export const DEFAULT_COURSES: Course[] = [
           },
           { id: cid(), order: 6, tag: 'Force', tagBg: '#F0F9FF', tagColor: '#0c4a6e', title: 'Force on current-carrying wire',
             formula: '\\vec{F} = I\\vec{L}\\times\\vec{B}\\quad |F| = BIL\\sin\\theta', formulaDisplay: true,
-            notes: '<strong>L</strong> = length vector in direction of current. θ = angle between wire and B.'
+            notes: '<strong>L</strong> = length vector in direction of current. θ = angle between wire and B.',
+            exampleIds: ['pcs125-supp-q20'],
           },
           { id: cid(), order: 7, tag: 'Parallel', tagBg: '#F0F9FF', tagColor: '#0c4a6e', title: 'Force between parallel wires',
             formula: '\\frac{F_B}{L} = \\frac{\\mu_0 I_1 I_2}{2\\pi a}', formulaDisplay: true,
@@ -437,7 +461,8 @@ export const DEFAULT_COURSES: Course[] = [
           },
           { id: cid(), order: 8, tag: 'Hall', tagBg: '#F0F9FF', tagColor: '#0c4a6e', title: 'Hall voltage',
             formula: 'V_H = \\frac{IB}{nqt}', formulaDisplay: true,
-            notes: '<strong>n</strong> = charge carrier density, <strong>t</strong> = thickness of conductor perpendicular to B. Used to determine carrier type and density.'
+            notes: '<strong>n</strong> = charge carrier density, <strong>t</strong> = thickness of conductor perpendicular to B. Used to determine carrier type and density.',
+            exampleIds: ['pcs125-supp-q21'],
           },
         ]
       },
