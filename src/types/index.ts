@@ -24,6 +24,7 @@ export interface Card {
   tableRows?: TableRow[];
   type?: CardType;
   order: number;
+  exampleIds?: string[];  // IDs of WorkedExample objects linked from this card
 }
 
 export interface Section {

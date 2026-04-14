@@ -4,9 +4,11 @@ import type { Card } from '@/types'
 interface Props {
   card: Card
   onEdit?: () => void
+  onExampleClick?: (id: string) => void
+  exampleNumbers?: Map<string, number>
 }
 
-export function FormulaCard({ card, onEdit }: Props) {
+export function FormulaCard({ card, onEdit, onExampleClick, exampleNumbers }: Props) {
   return (
     <div
       className="card-root group"
@@ -77,6 +79,32 @@ export function FormulaCard({ card, onEdit }: Props) {
         <div style={{ fontSize: 12, color: 'var(--color-text2)', lineHeight: 1.65 }}
           dangerouslySetInnerHTML={{ __html: card.notes }}
         />
+      )}
+
+      {/* Worked example links */}
+      {onExampleClick && card.exampleIds && card.exampleIds.length > 0 && (
+        <div style={{ marginTop: 7, display: 'flex', alignItems: 'center', gap: 4, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 9.5, color: 'var(--color-text3)', fontWeight: 500 }}>See:</span>
+          {card.exampleIds.map(id => {
+            const num = exampleNumbers?.get(id)
+            if (num == null) return null
+            return (
+              <button
+                key={id}
+                onClick={e => { e.stopPropagation(); onExampleClick(id) }}
+                style={{
+                  fontSize: 9.5, padding: '1px 7px', borderRadius: 99,
+                  border: `0.5px solid ${card.tagColor}80`,
+                  background: card.tagBg, color: card.tagColor,
+                  cursor: 'pointer', fontFamily: 'inherit', fontWeight: 700,
+                  lineHeight: 1.7,
+                }}
+              >
+                Q{num}
+              </button>
+            )
+          })}
+        </div>
       )}
 
     </div>

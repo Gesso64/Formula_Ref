@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { renderLatex } from '@/lib/katex'
 import type { WorkedExample } from '@/types'
 
@@ -7,13 +7,20 @@ interface Props {
   accent: string
   accentBg: string
   accentFg: string
+  forceOpen?: boolean
 }
 
-export function ExampleCard({ example, accent, accentBg, accentFg }: Props) {
+export function ExampleCard({ example, accent, accentBg, accentFg, forceOpen }: Props) {
   const [open, setOpen] = useState(false)
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (forceOpen) setOpen(true)
+  }, [forceOpen])
 
   return (
     <div
+      id={`ex-${example.id}`}
       style={{
         background: 'var(--color-surface)',
         border: `0.5px solid ${open ? accent : 'var(--color-border)'}`,

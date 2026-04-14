@@ -1,11 +1,30 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useCourses } from '@/hooks/useCourses'
 import { ExampleCard } from './ExampleCard'
 
-export function ExamplesView() {
+interface Props {
+  jumpToExample?: string
+  onJumpDone?: () => void
+}
+
+export function ExamplesView({ jumpToExample, onJumpDone }: Props) {
   const { activeCourse } = useCourses()
   const [search, setSearch] = useState('')
   const [activeTopic, setActiveTopic] = useState('all')
+
+  useEffect(() => {
+    if (!jumpToExample) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setSearch('')
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setActiveTopic('all')
+    const timer = setTimeout(() => {
+      const el = document.getElementById(`ex-${jumpToExample}`)
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      onJumpDone?.()
+    }, 80)
+    return () => clearTimeout(timer)
+  }, [jumpToExample])
 
   const examples = activeCourse?.examples ?? []
 
@@ -82,7 +101,8 @@ export function ExamplesView() {
       {/* Example cards */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {filtered.map(ex => (
-          <ExampleCard key={ex.id} example={ex} accent={accent} accentBg={accentBg} accentFg={accentFg} />
+          <ExampleCard key={ex.id} example={ex} accent={accent} accentBg={accentBg} accentFg={accentFg}
+            forceOpen={ex.id === jumpToExample} />
         ))}
       </div>
 

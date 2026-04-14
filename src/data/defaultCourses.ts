@@ -56,9 +56,10 @@ export const DEFAULT_COURSES: Course[] = [
             subs: [
               { latex: 'x(t) = A\\cos(\\omega t + \\phi)' },
               { latex: 'v(t) = -A\\omega\\sin(\\omega t + \\phi)' },
-              { latex: 'a(t) = -A\\omega^2\\cos(\\omega t + \\phi)' },
+              { latex: 'a(t) = -A\\omega^2\\cos(\\omega t + \\phi) = -\\omega^2 x' },
             ],
-            notes: '<strong>A</strong> = amplitude, <strong>ω</strong> = angular frequency, <strong>φ</strong> = phase constant. Note: a = −ω²x always holds in SHM.'
+            notes: '<strong>A</strong> = amplitude, <strong>ω</strong> = angular frequency, <strong>φ</strong> = phase constant. <strong>a = −ω²x</strong> always holds in SHM.',
+            exampleIds: ['pcs125-w18-q1'],
           },
           { id: cid(), order: 1, tag: 'SHM', tagBg: '#EEF0FB', tagColor: '#3730a3', title: 'Angular frequency — systems',
             subs: [
@@ -66,7 +67,8 @@ export const DEFAULT_COURSES: Course[] = [
               { latex: '\\omega = \\sqrt{\\dfrac{g}{L}}\\quad\\text{[simple pendulum]}' },
               { latex: '\\omega = \\sqrt{\\dfrac{mgd}{I}}\\quad\\text{[physical pendulum]}' },
             ],
-            notes: '<strong>k</strong> = spring constant, <strong>d</strong> = distance from pivot to CoM, <strong>I</strong> = moment of inertia.'
+            notes: '<strong>k</strong> = spring constant, <strong>d</strong> = distance from pivot to CoM, <strong>I</strong> = moment of inertia.',
+            exampleIds: ['pcs125-w18-q1', 'pcs125-w18-q2'],
           },
           { id: cid(), order: 2, tag: 'Period', tagBg: '#EEF0FB', tagColor: '#3730a3', title: 'Period and frequency',
             subs: [
@@ -74,7 +76,8 @@ export const DEFAULT_COURSES: Course[] = [
               { latex: 'T_{\\text{spring}} = 2\\pi\\sqrt{\\dfrac{m}{k}}' },
               { latex: 'T_{\\text{pend}} = 2\\pi\\sqrt{\\dfrac{L}{g}}' },
             ],
-            notes: 'Period is independent of amplitude for ideal SHM.'
+            notes: 'Period is independent of amplitude for ideal SHM.',
+            exampleIds: ['pcs125-w18-q2'],
           },
           { id: cid(), order: 3, tag: 'Energy', tagBg: '#EEF0FB', tagColor: '#3730a3', title: 'Energy in SHM',
             subs: [
@@ -106,12 +109,21 @@ export const DEFAULT_COURSES: Course[] = [
         id: sid(), label: 'Mechanical Waves (Ch. 16–17)', cat: 'wave', order: 2,
         cards: [
           { id: cid(), order: 0, tag: 'Wave', tagBg: '#E0F2FE', tagColor: '#0369a1', title: 'Wave parameters',
-            subs: [{ latex: 'v = f\\lambda' }, { latex: 'k = \\dfrac{2\\pi}{\\lambda}' }, { latex: 'T = \\dfrac{2\\pi}{\\omega}' }],
-            notes: '<strong>k</strong> = wave number (rad/m), <strong>λ</strong> = wavelength.'
+            subs: [
+              { latex: 'v = f\\lambda' },
+              { latex: 'k = \\dfrac{2\\pi}{\\lambda}' },
+              { latex: 'T = \\dfrac{2\\pi}{\\omega}' },
+              { latex: 'v_y = \\dfrac{\\partial y}{\\partial t}\\quad\\text{[transverse particle velocity]}' },
+            ],
+            notes: '<strong>k</strong> = wave number (rad/m), <strong>λ</strong> = wavelength. Transverse particle velocity is the time derivative of the displacement — use it to find phase constants.',
           },
           { id: cid(), order: 1, tag: 'Wave', tagBg: '#E0F2FE', tagColor: '#0369a1', title: 'Travelling wave equation',
-            formula: 'y(x,t) = A\\sin(kx - \\omega t + \\phi)', formulaDisplay: true,
-            notes: 'Minus sign → wave travels in +x direction.'
+            subs: [
+              { latex: 'y = A\\sin(kx - \\omega t + \\phi)\\quad\\text{[+x direction]}' },
+              { latex: 'y = A\\sin(kx + \\omega t + \\phi)\\quad\\text{[−x direction]}' },
+            ],
+            notes: 'Sign in front of ωt determines direction. For initial conditions: apply y(0,0) to find φ, then check v_y(0,0) = ∂y/∂t to confirm sign.',
+            exampleIds: ['pcs125-w18-q3'],
           },
           { id: cid(), order: 2, tag: 'Speed', tagBg: '#E0F2FE', tagColor: '#0369a1', title: 'Wave speed — media',
             subs: [
@@ -119,7 +131,8 @@ export const DEFAULT_COURSES: Course[] = [
               { latex: 'v = \\sqrt{\\dfrac{B}{\\rho}}\\quad\\text{[fluid]}' },
               { latex: 'v = 331\\sqrt{1+\\dfrac{T_C}{273}}\\quad\\text{[air]}' },
             ],
-            notes: '<strong>Tₛ</strong> = tension, <strong>μ</strong> = linear mass density.'
+            notes: '<strong>Tₛ</strong> = tension, <strong>μ</strong> = linear mass density.',
+            exampleIds: ['pcs125-w18-q4'],
           },
           { id: cid(), order: 3, tag: 'Power', tagBg: '#E0F2FE', tagColor: '#0369a1', title: 'Power on string',
             formula: 'P = \\tfrac{1}{2}\\mu\\omega^2 A^2 v', formulaDisplay: true,
@@ -127,15 +140,17 @@ export const DEFAULT_COURSES: Course[] = [
           },
           { id: cid(), order: 4, tag: 'Standing', tagBg: '#E0F2FE', tagColor: '#0369a1', title: 'Standing waves',
             formula: 'y = 2A\\sin(kx)\\cos(\\omega t)', formulaDisplay: true,
-            notes: 'Nodes at x = nλ/2. Antinodes at x = (2n+1)λ/4.'
+            notes: 'Nodes at x = nλ/2. Antinodes at x = (2n+1)λ/4.',
+            exampleIds: ['pcs125-w18-q7'],
           },
           { id: cid(), order: 5, tag: 'Harmonics', tagBg: '#E0F2FE', tagColor: '#0369a1', title: 'Harmonics — strings & pipes',
             subs: [
               { latex: 'f_n = n\\dfrac{v}{2L}\\quad\\text{[string, both fixed]}' },
               { latex: 'f_n = n\\dfrac{v}{2L}\\quad\\text{[pipe, both open]}' },
-              { latex: 'f_n = (2n-1)\\dfrac{v}{4L}\\quad\\text{[pipe, one closed]}' },
+              { latex: 'f_n = (2n-1)\\dfrac{v}{4L}\\quad n=1,3,5,\\ldots\\quad\\text{[pipe, one closed]}' },
             ],
-            notes: 'One closed end: odd harmonics only.'
+            notes: 'One closed end: <strong>odd harmonics only</strong> (n = 1, 3, 5…). Even harmonics are forbidden.',
+            exampleIds: ['pcs125-w18-q9'],
           },
           { id: cid(), order: 6, tag: 'Phase', tagBg: '#E0F2FE', tagColor: '#0369a1', title: 'Phase difference from path difference',
             formula: '\\Delta\\phi = \\frac{2\\pi}{\\lambda}\\,|r_2 - r_1|', formulaDisplay: true,
@@ -159,15 +174,18 @@ export const DEFAULT_COURSES: Course[] = [
         cards: [
           { id: cid(), order: 0, tag: 'Intensity', tagBg: '#DBEAFE', tagColor: '#1e40af', title: 'Intensity from point source',
             formula: 'I = \\frac{P}{4\\pi r^2}', formulaDisplay: true,
-            notes: 'Doubling distance → ¼ intensity.'
+            notes: 'Doubling distance → ¼ intensity.',
+            exampleIds: ['pcs125-w18-q5'],
           },
           { id: cid(), order: 1, tag: 'Decibels', tagBg: '#DBEAFE', tagColor: '#1e40af', title: 'Sound intensity level',
             formula: '\\beta = 10\\log_{10}\\!\\left(\\frac{I}{I_0}\\right)\\quad[\\text{dB}]', formulaDisplay: true,
-            notes: '<strong>I₀ = 10⁻¹² W/m²</strong>. Every 10 dB → 10× intensity.'
+            notes: '<strong>I₀ = 10⁻¹² W/m²</strong>. Every 10 dB → 10× intensity. Rearranged: I = I₀ × 10^(β/10).',
+            exampleIds: ['pcs125-w18-q5'],
           },
           { id: cid(), order: 2, tag: 'Doppler', tagBg: '#DBEAFE', tagColor: '#1e40af', title: 'Doppler effect',
             formula: "f' = f\\cdot\\frac{v + v_O}{v - v_S}", formulaDisplay: true,
-            notes: 'Observer in numerator, source in denominator. + toward, − away.'
+            notes: 'Observer in numerator, source in denominator. + toward, − away.',
+            exampleIds: ['pcs125-w18-q6'],
           },
           { id: cid(), order: 3, tag: 'Beats', tagBg: '#DBEAFE', tagColor: '#1e40af', title: 'Beat frequency',
             formula: 'f_{\\text{beat}} = |f_1 - f_2|', formulaDisplay: true,
@@ -195,15 +213,18 @@ export const DEFAULT_COURSES: Course[] = [
               { latex: 'F_g = \\dfrac{Gm_1 m_2}{r^2}' },
               { latex: '\\vec{F} = m\\vec{g};\\quad |\\vec{g}| = \\dfrac{GM}{r^2}' },
             ],
-            notes: 'Always attractive. Valid for point masses or spherically symmetric bodies. <strong>g</strong> = local gravitational field strength.'
+            notes: 'Always attractive. Valid for point masses or spherically symmetric bodies. <strong>g</strong> = local gravitational field strength.',
+            exampleIds: ['pcs125-w18-q2', 'pcs125-w18-q10'],
           },
           { id: cid(), order: 1, tag: 'Potential', tagBg: '#F0FDF4', tagColor: '#166534', title: 'Gravitational potential energy',
             formula: 'U(r) = -\\frac{GMm}{r}', formulaDisplay: true,
-            notes: 'Negative sign essential. Bound orbits have E < 0.'
+            notes: 'Negative sign essential. Bound orbits have E < 0.',
+            exampleIds: ['pcs125-w18-q8'],
           },
           { id: cid(), order: 2, tag: 'Escape', tagBg: '#F0FDF4', tagColor: '#166534', title: 'Escape speed',
             formula: 'v_{\\text{esc}} = \\sqrt{\\frac{2GM}{R}}', formulaDisplay: true,
-            notes: 'For Earth: ≈ 11.2 km/s.'
+            notes: 'For Earth: ≈ 11.2 km/s.',
+            exampleIds: ['pcs125-w18-q8'],
           },
           { id: cid(), order: 3, tag: 'Orbit', tagBg: '#F0FDF4', tagColor: '#166534', title: 'Circular orbit & Kepler 3rd',
             subs: [
@@ -219,14 +240,16 @@ export const DEFAULT_COURSES: Course[] = [
         cards: [
           { id: cid(), order: 0, tag: 'Coulomb', tagBg: '#FEF3C7', tagColor: '#92400e', title: "Coulomb's law",
             formula: 'F = k_e\\frac{|q_1||q_2|}{r^2}', formulaDisplay: true,
-            notes: 'kₑ = 8.988 × 10⁹ N·m²/C². Superposition applies.'
+            notes: 'kₑ = 8.988 × 10⁹ N·m²/C². Superposition applies.',
+            exampleIds: ['pcs125-w18-q12', 'pcs125-w18-q25'],
           },
           { id: cid(), order: 1, tag: 'E-Field', tagBg: '#FEF3C7', tagColor: '#92400e', title: 'E-field — point charge & continuous distribution',
             subs: [
               { latex: 'E = k_e\\dfrac{|q|}{r^2}\\quad\\text{[point charge]}' },
               { latex: '\\vec{E} = k_e\\int\\dfrac{dq}{r^2}\\,\\hat{r}\\quad\\text{[continuous]}' },
             ],
-            notes: 'Direction: outward from +, inward to −. For continuous distributions, integrate over the charge distribution.'
+            notes: 'Direction: outward from +, inward to −. For continuous distributions, integrate over the charge distribution.',
+            exampleIds: ['pcs125-w18-q11', 'pcs125-w18-q25'],
           },
           { id: cid(), order: 2, tag: 'Plane', tagBg: '#FEF3C7', tagColor: '#92400e', title: 'E-field — infinite plane',
             formula: '|E| = \\frac{\\sigma}{2\\varepsilon_0}', formulaDisplay: true,
@@ -240,18 +263,26 @@ export const DEFAULT_COURSES: Course[] = [
             ],
             notes: '<strong>p</strong> points from − to + charge.'
           },
-          { id: cid(), order: 4, tag: 'Energy', tagBg: '#FEF3C7', tagColor: '#92400e', title: 'Electric PE (two charges)',
-            formula: 'U = k_e\\frac{q_1 q_2}{r}', formulaDisplay: true,
-            notes: 'Sign matters: U > 0 repulsive, U < 0 attractive.'
+          { id: cid(), order: 4, tag: 'Energy', tagBg: '#FEF3C7', tagColor: '#92400e', title: 'Electric PE — charges',
+            subs: [
+              { latex: 'U = k_e\\dfrac{q_1 q_2}{r}\\quad\\text{[two charges]}' },
+              { latex: 'U = k_e\\!\\sum_{i<j}\\dfrac{q_i q_j}{r_{ij}}\\quad\\text{[system of N charges]}' },
+            ],
+            notes: 'Sign matters: U > 0 repulsive pair, U < 0 attractive pair. Sum all unique pairs.',
+            exampleIds: ['pcs125-w18-q16'],
           },
         ]
       },
       {
         id: sid(), label: "Gauss's Law (Ch. 24)", cat: 'gauss', order: 6,
         cards: [
-          { id: cid(), order: 0, tag: 'Gauss', tagBg: '#FDE68A', tagColor: '#78350f', title: "Gauss's Law",
-            formula: '\\oint\\vec{E}\\cdot d\\vec{A} = \\frac{q_{\\text{in}}}{\\varepsilon_0}', formulaDisplay: true,
-            notes: 'Only charge inside the Gaussian surface contributes.'
+          { id: cid(), order: 0, tag: 'Gauss', tagBg: '#FDE68A', tagColor: '#78350f', title: "Gauss's Law & Electric Flux",
+            subs: [
+              { latex: '\\oint\\vec{E}\\cdot d\\vec{A} = \\frac{q_{\\text{in}}}{\\varepsilon_0}\\quad\\text{[closed surface]}' },
+              { latex: '\\Phi_E = EA\\cos\\theta = \\vec{E}\\cdot\\vec{A}\\quad\\text{[uniform field, flat surface]}' },
+            ],
+            notes: 'Only charge inside the Gaussian surface contributes. For a flat surface: only the component of E perpendicular to the surface contributes to flux.',
+            exampleIds: ['pcs125-w18-q13', 'pcs125-w18-q14'],
           },
           { id: cid(), order: 1, tag: 'Line', tagBg: '#FDE68A', tagColor: '#78350f', title: 'E-field — infinite line charge',
             formula: 'E = \\frac{\\lambda}{2\\pi\\varepsilon_0 r}', formulaDisplay: true,
@@ -271,8 +302,12 @@ export const DEFAULT_COURSES: Course[] = [
         id: sid(), label: 'Electric Potential (Ch. 25)', cat: 'pot', order: 7,
         cards: [
           { id: cid(), order: 0, tag: 'Potential', tagBg: '#FCEEF8', tagColor: '#7e22ce', title: 'Electric potential — point charge',
-            formula: 'V = k_e\\frac{q}{r}', formulaDisplay: true,
-            notes: 'V is a scalar. Reference V = 0 at r → ∞.'
+            subs: [
+              { latex: 'V = k_e\\dfrac{q}{r}\\quad\\text{[single charge]}' },
+              { latex: 'V = k_e\\sum_i \\dfrac{q_i}{r_i}\\quad\\text{[multiple charges]}' },
+            ],
+            notes: 'V is a scalar — superpose algebraically. Reference V = 0 at r → ∞.',
+            exampleIds: ['pcs125-w18-q21'],
           },
           { id: cid(), order: 1, tag: 'E from V', tagBg: '#FCEEF8', tagColor: '#7e22ce', title: 'Electric field from potential',
             subs: [
@@ -286,9 +321,10 @@ export const DEFAULT_COURSES: Course[] = [
             subs: [
               { latex: 'V_B - V_A = -\\vec{E}\\cdot\\vec{r}_{AB} = -El\\cos\\theta = -Ed' },
               { latex: 'U_B - U_A = q(V_B - V_A) = -W^{\\text{Field}}_{A\\to B}' },
-              { latex: 'W^{\\text{Field}}_{A\\to B} = \\int_A^B \\vec{F}\\cdot d\\vec{r}' },
+              { latex: 'W^{\\text{Field}}_{A\\to B} = q(V_A - V_B)' },
             ],
-            notes: 'For uniform field: V_B − V_A = −Ed where d is displacement along field. Work done by the field equals the negative change in PE.'
+            notes: 'For uniform field: V_B − V_A = −Ed where d is displacement along field. <strong>W = q(Vₐ − V_b)</strong>: field does negative work when positive charge moves to higher V.',
+            exampleIds: ['pcs125-w18-q15'],
           },
           { id: cid(), order: 3, tag: 'Capacitor', tagBg: '#FCEEF8', tagColor: '#7e22ce', title: 'Parallel-plate capacitor',
             subs: [
@@ -312,7 +348,8 @@ export const DEFAULT_COURSES: Course[] = [
           },
           { id: cid(), order: 1, tag: 'Power', tagBg: '#FFF1F2', tagColor: '#9f1239', title: 'Electrical power',
             formula: 'P = I\\Delta V = I^2 R = \\dfrac{(\\Delta V)^2}{R}', formulaDisplay: true,
-            notes: 'All three forms equivalent via Ohm\'s law.'
+            notes: 'All three forms equivalent via Ohm\'s law.',
+            exampleIds: ['pcs125-w18-q17'],
           },
           { id: cid(), order: 2, tag: 'Resistors', tagBg: '#FFF1F2', tagColor: '#9f1239', title: 'Resistors in series & parallel',
             subs: [
@@ -321,11 +358,23 @@ export const DEFAULT_COURSES: Course[] = [
             ],
             notes: 'For 2 parallel: R_par = R₁R₂/(R₁+R₂).'
           },
-          { id: cid(), order: 3, tag: 'Current', tagBg: '#FFF1F2', tagColor: '#9f1239', title: 'Current — drift velocity',
-            formula: 'I_{avg} = nqv_d A', formulaDisplay: true,
-            notes: '<strong>n</strong> = charge carrier density (m⁻³), <strong>v_d</strong> = drift velocity, <strong>A</strong> = cross-sectional area.'
+          { id: cid(), order: 3, tag: 'Current', tagBg: '#FFF1F2', tagColor: '#9f1239', title: 'Current — drift velocity & charge',
+            subs: [
+              { latex: 'I_{avg} = nqv_d A' },
+              { latex: 'I = \\dfrac{\\Delta Q}{\\Delta t} \\Rightarrow Q = I\\,t' },
+            ],
+            notes: '<strong>n</strong> = charge carrier density (m⁻³), <strong>v_d</strong> = drift velocity, <strong>A</strong> = cross-section. Q = It for constant current.',
+            exampleIds: ['pcs125-w18-q17'],
           },
-          { id: cid(), order: 4, tag: 'RC', tagBg: '#FFF1F2', tagColor: '#9f1239', title: 'RC circuits',
+          { id: cid(), order: 4, tag: 'Divider', tagBg: '#FFF1F2', tagColor: '#9f1239', title: 'Voltage divider',
+            subs: [
+              { latex: 'V_{\\text{out}} = V_{\\text{in}}\\cdot\\dfrac{R_2}{R_1+R_2}' },
+              { latex: 'I = \\dfrac{V_{\\text{in}}}{R_1+R_2}' },
+            ],
+            notes: 'V_out is across R₂. Add parallel loads in parallel with R₂ before applying formula.',
+            exampleIds: ['pcs125-w18-q18'],
+          },
+          { id: cid(), order: 5, tag: 'RC', tagBg: '#FFF1F2', tagColor: '#9f1239', title: 'RC circuits',
             subs: [
               { latex: 'q(t) = C\\mathcal{E}\\left(1-e^{-t/RC}\\right)\\;\\text{[charging]}' },
               { latex: 'q(t) = Q_0\\,e^{-t/RC}\\;\\text{[discharging]}' },
@@ -339,14 +388,16 @@ export const DEFAULT_COURSES: Course[] = [
         cards: [
           { id: cid(), order: 0, tag: 'Force', tagBg: '#F0F9FF', tagColor: '#0c4a6e', title: 'Magnetic force on charge',
             formula: '\\vec{F} = q\\vec{v}\\times\\vec{B}\\quad |F|=qvB\\sin\\theta', formulaDisplay: true,
-            notes: 'Magnetic force does NO work. Cannot change speed, only direction.'
+            notes: 'Magnetic force does NO work. Cannot change speed, only direction.',
+            exampleIds: ['pcs125-w18-q20'],
           },
           { id: cid(), order: 1, tag: 'Circular', tagBg: '#F0F9FF', tagColor: '#0c4a6e', title: 'Circular motion in B field',
             subs: [
               { latex: 'r = \\dfrac{mv}{|q|B}' },
               { latex: 'T = \\dfrac{2\\pi m}{|q|B}' },
             ],
-            notes: 'Period T is independent of speed (cyclotron principle).'
+            notes: 'Period T is independent of speed (cyclotron principle).',
+            exampleIds: ['pcs125-w18-q19'],
           },
           { id: cid(), order: 2, tag: 'Biot-Savart', tagBg: '#E0F2FE', tagColor: '#075985', title: 'Biot-Savart law',
             formula: 'dB = \\frac{\\mu_0 I}{4\\pi}\\frac{ds\\sin\\theta}{r^2}', formulaDisplay: true,
@@ -360,15 +411,20 @@ export const DEFAULT_COURSES: Course[] = [
               { latex: 'B = \\dfrac{\\mu_0 I}{2a}\\quad\\text{[loop centre, }x=0\\text{]}' },
               { latex: 'B = \\mu_0 nI\\quad\\text{[solenoid inside]}' },
             ],
-            notes: 'Use right-hand rule for direction. Arc formula: θ in radians. Loop-axis at x=0 reduces to μ₀I/(2a).'
+            notes: 'Use right-hand rule for direction. Arc formula: θ in radians. Loop-axis at x=0 reduces to μ₀I/(2a).',
+            exampleIds: ['pcs125-w18-q23'],
           },
           { id: cid(), order: 4, tag: 'Ampere', tagBg: '#E0F2FE', tagColor: '#075985', title: "Ampère's law",
             formula: '\\oint\\vec{B}\\cdot d\\vec{s} = \\mu_0 I_{\\text{enc}}', formulaDisplay: true,
             notes: 'Choose Amperian loop where B is constant and tangential.'
           },
           { id: cid(), order: 5, tag: 'Lorentz', tagBg: '#F0F9FF', tagColor: '#0c4a6e', title: 'Lorentz force (combined E & B)',
-            formula: '\\vec{F} = q\\vec{E} + q\\vec{v}\\times\\vec{B}', formulaDisplay: true,
-            notes: 'Full force on a charge moving through both electric and magnetic fields.'
+            subs: [
+              { latex: '\\vec{F} = q\\vec{E} + q\\vec{v}\\times\\vec{B}' },
+              { latex: 'v = \\dfrac{E}{B}\\quad\\text{[velocity selector: } qE = qvB \\text{]}' },
+            ],
+            notes: 'Full force on a charge in both E and B fields. <strong>Velocity selector</strong>: when electric and magnetic forces balance, only particles with v = E/B pass undeflected.',
+            exampleIds: ['pcs125-w18-q24'],
           },
           { id: cid(), order: 6, tag: 'Force', tagBg: '#F0F9FF', tagColor: '#0c4a6e', title: 'Force on current-carrying wire',
             formula: '\\vec{F} = I\\vec{L}\\times\\vec{B}\\quad |F| = BIL\\sin\\theta', formulaDisplay: true,
@@ -376,7 +432,8 @@ export const DEFAULT_COURSES: Course[] = [
           },
           { id: cid(), order: 7, tag: 'Parallel', tagBg: '#F0F9FF', tagColor: '#0c4a6e', title: 'Force between parallel wires',
             formula: '\\frac{F_B}{L} = \\frac{\\mu_0 I_1 I_2}{2\\pi a}', formulaDisplay: true,
-            notes: 'Parallel currents attract; antiparallel currents repel. a = separation between wires.'
+            notes: 'Parallel currents attract; antiparallel currents repel. a = separation between wires.',
+            exampleIds: ['pcs125-w18-q22'],
           },
           { id: cid(), order: 8, tag: 'Hall', tagBg: '#F0F9FF', tagColor: '#0c4a6e', title: 'Hall voltage',
             formula: 'V_H = \\frac{IB}{nqt}', formulaDisplay: true,

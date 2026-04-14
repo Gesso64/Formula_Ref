@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 import { FormulaCard } from '@/components/cards/FormulaCard'
 import { InterestTable } from '@/components/cards/InterestTable'
 import { CardEditor } from '@/components/cards/CardEditor'
@@ -17,8 +17,20 @@ export function CardGrid() {
   useEffect(() => { setActiveCat('all'); setMode('formulas') }, [activeCourse?.id])
   const [editCard, setEditCard] = useState<{ card?: Card; section: Section } | null>(null)
   const [editSection, setEditSection] = useState<{ section?: Section; order: number } | null>(null)
+  const [jumpToExample, setJumpToExample] = useState<string | null>(null)
 
   const hasExamples = (activeCourse?.examples?.length ?? 0) > 0
+
+  const exampleNumbers = useMemo(() => {
+    const map = new Map<string, number>()
+    activeCourse?.examples?.forEach(ex => map.set(ex.id, ex.number))
+    return map
+  }, [activeCourse])
+
+  const handleExampleClick = useCallback((id: string) => {
+    setMode('examples')
+    setJumpToExample(id)
+  }, [])
 
   const sections = activeCourse?.sections ?? []
 
@@ -85,7 +97,7 @@ export function CardGrid() {
       </div>
 
       {mode === 'examples' ? (
-        <ExamplesView />
+        <ExamplesView jumpToExample={jumpToExample ?? undefined} onJumpDone={() => setJumpToExample(null)} />
       ) : (
         <>
           {/* Search */}
@@ -130,7 +142,10 @@ export function CardGrid() {
                         </div>
                         <InterestTable />
                       </div>
-                    : <FormulaCard key={card.id} card={card} onEdit={() => setEditCard({ card, section })} />
+                    : <FormulaCard key={card.id} card={card} onEdit={() => setEditCard({ card, section })}
+                        onExampleClick={hasExamples ? handleExampleClick : undefined}
+                        exampleNumbers={exampleNumbers}
+                      />
                 ))}
                 {/* Add card button */}
                 <button onClick={() => setEditCard({ section })}
