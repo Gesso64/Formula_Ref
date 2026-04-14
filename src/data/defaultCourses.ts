@@ -1,5 +1,6 @@
 import type { Course } from '@/types'
 import { PCS125_W18_EXAMPLES } from './pcs125Examples'
+import { ECN801_EXAMPLES } from './ecn801Examples'
 
 // Helper to make a card id deterministic
 let _cid = 0
@@ -1052,6 +1053,7 @@ export const DEFAULT_COURSES: Course[] = [
             title: 'Discrete Compounding Interest Factors — select rate & period' },
         ]
       },
-    ]
+    ],
+    examples: ECN801_EXAMPLES,
   },
 ]

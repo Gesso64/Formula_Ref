@@ -73,4 +73,5 @@ export interface WorkedExample {
   steps: ExampleStep[];
   answer: string;
   interpretation?: string;
+  diagram?: string;  // registry key for optional SVG diagram
 }
