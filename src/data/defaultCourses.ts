@@ -806,8 +806,8 @@ export const DEFAULT_COURSES: Course[] = [
           { id: cid(), order: 0, tag: 'Structure', tagBg: '#F3E8FF', tagColor: '#581C87', title: 'Ceramic crystal edge lengths',
             subs: [
               { latex: '\\text{Rock Salt: }a = 2(r_c + r_a)' },
-              { latex: '\\text{CsCl: }a = 4(r_c + r_a)/\\sqrt{3}' },
-              { latex: '\\text{Zinc Blende: }a = 2\\sqrt{2}(r_c + r_a)' },
+              { latex: '\\text{CsCl: }a = \\frac{2(r_c + r_a)}{\\sqrt{3}}' },
+              { latex: '\\text{Zinc Blende: }a = \\frac{4(r_c + r_a)}{\\sqrt{3}}' },
             ],
             notes: 'rᶜ = cation radius, rₐ = anion radius.'
           },
@@ -832,13 +832,70 @@ export const DEFAULT_COURSES: Course[] = [
             notes: 'PDI = M_w/M_n measures chain length distribution breadth.'
           },
           { id: cid(), order: 2, tag: 'Crystallinity', tagBg: '#FFF7ED', tagColor: '#7C2D12', title: 'Percent crystallinity',
-            formula: '\\%\\text{Cryst.} = \\frac{\\rho_s - \\rho_a}{\\rho_c - \\rho_a}\\times 100', formulaDisplay: true,
-            notes: 'ρₛ = sample, ρᶜ = fully crystalline, ρₐ = fully amorphous.'
+            formula: '\\%\\text{Cryst.} = \\frac{\\rho_c(\\rho_s - \\rho_a)}{\\rho_s(\\rho_c - \\rho_a)}\\times 100', formulaDisplay: true,
+            notes: 'ρₛ = sample density, ρᶜ = fully crystalline, ρₐ = fully amorphous.'
           },
         ]
       },
       {
-        id: sid(), label: 'Mechanical Properties (Ch. 6–7)', cat: 'mech', order: 6,
+        id: sid(), label: 'Composites (Ch. 16)', cat: 'composite', order: 6,
+        cards: [
+          { id: cid(), order: 0, tag: 'Modulus', tagBg: '#FEF9C3', tagColor: '#713F12', title: 'Rule of mixtures — modulus',
+            subs: [
+              { latex: 'E_c^{(u)} = E_m V_m + E_f V_f\\quad\\text{(upper / longitudinal)}' },
+              { latex: 'E_c^{(l)} = \\frac{E_m E_f}{V_m E_f + V_f E_m}\\quad\\text{(lower / transverse)}' },
+            ],
+            notes: 'Vₘ + Vf = 1. Upper bound assumes isostrain; lower assumes isostress.'
+          },
+          { id: cid(), order: 1, tag: 'Fiber', tagBg: '#FEF9C3', tagColor: '#713F12', title: 'Critical fiber length',
+            formula: 'l_c = \\frac{\\sigma_f^* d}{2\\tau_c}', formulaDisplay: true,
+            notes: 'σf* = fiber tensile strength, d = fiber diameter, τc = matrix–fiber bond/shear strength.'
+          },
+          { id: cid(), order: 2, tag: 'Strength', tagBg: '#FEF9C3', tagColor: '#713F12', title: 'Longitudinal tensile strength',
+            formula: '\\sigma_{cl}^* = \\sigma_m\'V_m + \\sigma_f^* V_f', formulaDisplay: true,
+            notes: 'σm′ = matrix stress at fiber failure strain. Assumes continuous, aligned fibers.'
+          },
+          { id: cid(), order: 3, tag: 'Discontinuous', tagBg: '#FEF9C3', tagColor: '#713F12', title: 'Random/discontinuous modulus',
+            formula: 'E_{cd} = K E_f V_f + E_m V_m', formulaDisplay: true,
+            notes: 'K = efficiency factor, typically 0.1–0.6 depending on fiber orientation distribution.'
+          },
+        ]
+      },
+      {
+        id: sid(), label: 'Corrosion (Ch. 17)', cat: 'corrosion', order: 7,
+        cards: [
+          { id: cid(), order: 0, tag: 'Half-Cells', tagBg: '#FEE2E2', tagColor: '#7F1D1D', title: 'Common reduction half-reactions',
+            subs: [
+              { latex: 'M \\to M^{n+} + ne^-\\quad\\text{(oxidation / anode)}' },
+              { latex: '2H^+ + 2e^- \\to H_2' },
+              { latex: 'O_2 + 4H^+ + 4e^- \\to 2H_2O\\quad\\text{(acidic)}' },
+              { latex: 'O_2 + 2H_2O + 4e^- \\to 4OH^-\\quad\\text{(neutral/basic)}' },
+            ],
+            notes: 'Oxidation (loss of e⁻) at anode. Reduction (gain of e⁻) at cathode.'
+          },
+          { id: cid(), order: 1, tag: 'EMF', tagBg: '#FEE2E2', tagColor: '#7F1D1D', title: 'Cell potential — standard & Nernst',
+            subs: [
+              { latex: '\\Delta V^0 = V_2^0 - V_1^0\\quad(V_2^0 > V_1^0 \\Rightarrow \\text{spontaneous})' },
+              { latex: '\\Delta V = \\Delta V^0 - \\frac{0.0592}{n}\\log\\!\\left(\\frac{[M_1^{n+}]}{[M_2^{n+}]}\\right)\\;\\text{@25°C}' },
+            ],
+            notes: 'Species 2 = cathode (higher V°, reduced); species 1 = anode (lower V°, oxidized). Positive ΔV = spontaneous.'
+          },
+          { id: cid(), order: 2, tag: 'CPR', tagBg: '#FEE2E2', tagColor: '#7F1D1D', title: 'Corrosion penetration rate',
+            formula: 'CPR = \\frac{KW}{\\rho A t}', formulaDisplay: true,
+            notes: 'K = 534 (mpy): W mg, ρ g/cm³, A in², t h. K = 87.6 (mm/yr): W mg, ρ g/cm³, A cm², t h.'
+          },
+          { id: cid(), order: 3, tag: 'Kinetics', tagBg: '#FEE2E2', tagColor: '#7F1D1D', title: 'Current corrosion rate & polarization',
+            subs: [
+              { latex: 'r = \\frac{i}{nF}\\quad\\text{(mol/m}^2\\text{·s)}' },
+              { latex: '\\eta_a = \\pm\\beta\\log\\!\\left(\\frac{i}{i_0}\\right)\\quad\\text{(activation polarization)}' },
+              { latex: '\\eta_c = \\frac{2.3RT}{nF}\\log\\!\\left(1 - \\frac{i}{i_L}\\right)\\quad\\text{(concentration polarization)}' },
+            ],
+            notes: 'F = 96 500 C/mol. i₀ = exchange current density, iL = limiting diffusion current density.'
+          },
+        ]
+      },
+      {
+        id: sid(), label: 'Mechanical Properties (Ch. 6–7)', cat: 'mech', order: 8,
         cards: [
           { id: cid(), order: 0, tag: 'Stress/Strain', tagBg: '#F0FDF4', tagColor: '#166534', title: 'Engineering stress and strain',
             subs: [
@@ -858,7 +915,7 @@ export const DEFAULT_COURSES: Course[] = [
         ]
       },
       {
-        id: sid(), label: 'Failure — Fracture & Fatigue (Ch. 8)', cat: 'fail', order: 7,
+        id: sid(), label: 'Failure — Fracture & Fatigue (Ch. 8)', cat: 'fail', order: 9,
         cards: [
           { id: cid(), order: 0, tag: 'Fracture', tagBg: '#FFF1F2', tagColor: '#881337', title: 'Fracture toughness — KIc',
             formula: 'K_{Ic} = Y\\sigma\\sqrt{\\pi a}', formulaDisplay: true,
