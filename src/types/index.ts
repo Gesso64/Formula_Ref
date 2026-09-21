@@ -40,6 +40,7 @@ export interface Course {
   code: string;
   name: string;
   description: string;
+  term?: string;  // sidebar grouping label, e.g. "Year 1 · Winter 2026"
   accent: string;
   accentBg: string;
   accentFg: string;

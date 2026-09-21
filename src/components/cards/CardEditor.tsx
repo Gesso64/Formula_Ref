@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { v4 as uuid } from 'uuid'
 import { renderLatex } from '@/lib/katex'
-import { useCourses } from '@/hooks/useCourses'
+import { useCourses } from '@/hooks/courseModel'
 import type { Card, Section, SubFormula, TableRow } from '@/types'
 
 const PRESET_TAGS = [

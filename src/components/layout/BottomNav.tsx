@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useCourses } from '@/hooks/useCourses'
+import { useCourses } from '@/hooks/courseModel'
 import { CourseEditor } from '@/components/courses/CourseEditor'
 import type { Course } from '@/types'
 

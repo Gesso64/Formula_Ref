@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useCourses, newCourse } from '@/hooks/useCourses'
+import { useCourses, newCourse } from '@/hooks/courseModel'
 import { Overlay, ModalHeader } from '@/components/cards/CardEditor'
 import type { Course } from '@/types'
 
@@ -23,15 +23,17 @@ export function CourseEditor({ course, onClose }: Props) {
   const [code, setCode] = useState(course?.code ?? '')
   const [name, setName] = useState(course?.name ?? '')
   const [desc, setDesc] = useState(course?.description ?? '')
+  const [term, setTerm] = useState(course?.term ?? '')
   const [accent, setAccent] = useState(course ? { accent: course.accent, accentBg: course.accentBg, accentFg: course.accentFg, accentBgDark: course.accentBgDark, accentFgDark: course.accentFgDark } : ACCENTS[0])
   const [saving, setSaving] = useState(false)
 
   const save = async () => {
     if (!code.trim() || !name.trim()) return
     setSaving(true)
+    const trimmedTerm = term.trim() || undefined
     const updated = course
-      ? { ...course, code, name, description: desc, ...accent }
-      : newCourse({ code, name, description: desc, ...accent })
+      ? { ...course, code, name, description: desc, term: trimmedTerm, ...accent }
+      : newCourse({ code, name, description: desc, term: trimmedTerm, ...accent })
     await upsertCourse(updated)
     if (!course) setActiveCourseId(updated.id)
     setSaving(false)
@@ -70,6 +72,10 @@ export function CourseEditor({ course, onClose }: Props) {
 
         <label style={lbl}>Description / subtitle
           <input style={inp} value={desc} onChange={e => setDesc(e.target.value)} placeholder="Textbook, chapters, semester…" />
+        </label>
+
+        <label style={lbl}>Sidebar group (optional)
+          <input style={inp} value={term} onChange={e => setTerm(e.target.value)} placeholder="e.g. Year 2 · Fall 2026" />
         </label>
 
         <div>

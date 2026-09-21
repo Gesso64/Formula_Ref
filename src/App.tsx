@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { CoursesProvider, useCourses } from '@/hooks/useCourses'
+import { CoursesProvider } from '@/hooks/useCourses'
+import { useCourses } from '@/hooks/courseModel'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { CardGrid } from '@/components/cards/CardGrid'

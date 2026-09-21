@@ -1,26 +1,8 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react'
-import { v4 as uuid } from 'uuid'
+import React, { useEffect, useState, useCallback } from 'react'
 import { storage } from '@/lib/storage'
 import { DEFAULT_COURSES } from '@/data/defaultCourses'
+import { CoursesContext } from '@/hooks/coursesContext'
 import type { Course, Section, Card } from '@/types'
-
-interface CoursesCtx {
-  courses: Course[]
-  activeCourse: Course | null
-  activeCourseId: string | null
-  setActiveCourseId: (id: string) => void
-  upsertCourse: (course: Course) => Promise<void>
-  deleteCourse: (id: string) => Promise<void>
-  upsertSection: (courseId: string, section: Section) => Promise<void>
-  deleteSection: (courseId: string, sectionId: string) => Promise<void>
-  upsertCard: (courseId: string, sectionId: string, card: Card) => Promise<void>
-  deleteCard: (courseId: string, sectionId: string, cardId: string) => Promise<void>
-  exportAll: () => Promise<void>
-  importAll: (file: File) => Promise<void>
-  loading: boolean
-}
-
-const Ctx = createContext<CoursesCtx | null>(null)
 
 /** djb2 hash of a default course's content (excludes mutable fields). */
 function hashCourse(course: Course): string {
@@ -145,41 +127,12 @@ export function CoursesProvider({ children }: { children: React.ReactNode }) {
   const activeCourse = courses.find(c => c.id === activeCourseId) ?? courses[0] ?? null
 
   return (
-    <Ctx.Provider value={{
+    <CoursesContext.Provider value={{
       courses, activeCourse, activeCourseId, setActiveCourseId,
       upsertCourse, deleteCourse, upsertSection, deleteSection,
       upsertCard, deleteCard, exportAll, importAll, loading
     }}>
       {children}
-    </Ctx.Provider>
+    </CoursesContext.Provider>
   )
-}
-
-export function useCourses() {
-  const ctx = useContext(Ctx)
-  if (!ctx) throw new Error('useCourses must be used inside CoursesProvider')
-  return ctx
-}
-
-export function newCourse(overrides: Partial<Course> = {}): Course {
-  return {
-    id: uuid(), code: '', name: '', description: '',
-    accent: '#6366f1', accentBg: '#e0e7ff', accentFg: '#3730a3',
-    accentBgDark: '#1e1b4b', accentFgDark: '#a5b4fc',
-    sections: [], isDefault: false,
-    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(),
-    ...overrides,
-  }
-}
-
-export function newSection(overrides: Partial<Section> = {}): Section {
-  return { id: uuid(), label: '', cat: uuid().slice(0, 8), cards: [], order: 0, ...overrides }
-}
-
-export function newCard(order = 0, overrides: Partial<Card> = {}): Card {
-  return {
-    id: uuid(), title: '', tag: '', tagColor: '#374151', tagBg: '#F3F4F6',
-    formula: '', formulaDisplay: true, subs: [], notes: '', tableRows: [],
-    order, ...overrides,
-  }
 }

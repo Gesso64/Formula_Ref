@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { useCourses } from '@/hooks/useCourses'
+import { useCourses } from '@/hooks/courseModel'
 import { ExampleCard } from './ExampleCard'
 
 interface Props {

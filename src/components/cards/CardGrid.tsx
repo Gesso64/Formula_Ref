@@ -1,29 +1,41 @@
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useCallback } from 'react'
 import { FormulaCard } from '@/components/cards/FormulaCard'
 import { InterestTable } from '@/components/cards/InterestTable'
 import { CardEditor } from '@/components/cards/CardEditor'
 import { SectionEditor } from '@/components/courses/SectionEditor'
 import { ExamplesView } from '@/components/examples/ExamplesView'
-import { useCourses } from '@/hooks/useCourses'
-import type { Card, Section } from '@/types'
+import { useCourses } from '@/hooks/courseModel'
+import type { Card, Course, Section } from '@/types'
 
 type Mode = 'formulas' | 'examples'
 
 export function CardGrid() {
   const { activeCourse } = useCourses()
+
+  if (!activeCourse) return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--color-text3)', fontSize: 14 }}>
+      No course selected
+    </div>
+  )
+
+  // Remount on course change so mode/search/filter/modal state resets automatically
+  // instead of syncing it back to defaults via an effect (see react-hooks/set-state-in-effect).
+  return <CardGridForCourse key={activeCourse.id} course={activeCourse} />
+}
+
+function CardGridForCourse({ course: activeCourse }: { course: Course }) {
   const [mode, setMode] = useState<Mode>('formulas')
   const [search, setSearch] = useState('')
   const [activeCat, setActiveCat] = useState('all')
-  useEffect(() => { setActiveCat('all'); setMode('formulas') }, [activeCourse?.id])
   const [editCard, setEditCard] = useState<{ card?: Card; section: Section } | null>(null)
   const [editSection, setEditSection] = useState<{ section?: Section; order: number } | null>(null)
   const [jumpToExample, setJumpToExample] = useState<string | null>(null)
 
-  const hasExamples = (activeCourse?.examples?.length ?? 0) > 0
+  const hasExamples = (activeCourse.examples?.length ?? 0) > 0
 
   const exampleNumbers = useMemo(() => {
     const map = new Map<string, number>()
-    activeCourse?.examples?.forEach(ex => map.set(ex.id, ex.number))
+    activeCourse.examples?.forEach(ex => map.set(ex.id, ex.number))
     return map
   }, [activeCourse])
 
@@ -32,7 +44,7 @@ export function CardGrid() {
     setJumpToExample(id)
   }, [])
 
-  const sections = activeCourse?.sections ?? []
+  const sections = activeCourse.sections ?? []
 
   const cats = useMemo(() => {
     const seen = new Set<string>()
@@ -55,12 +67,6 @@ export function CardGrid() {
       }))
       .filter(s => s.cards.length > 0)
   }, [sections, activeCat, search])
-
-  if (!activeCourse) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--color-text3)', fontSize: 14 }}>
-      No course selected
-    </div>
-  )
 
   const accent = activeCourse.accent
 

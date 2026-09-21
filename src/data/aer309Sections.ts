@@ -342,10 +342,10 @@ export const AER309_SECTIONS: Section[] = [
         tagColor: '#5b21b6',
         title: 'Closed system — ideal gas, constant specific heats',
         subs: [
-          { latex: 'Q - W_b = mc_v\\left(T_2-T_1\\right) \\quad (\\text{const. } V)' },
-          { latex: 'Q - W_b = mc_p\\left(T_2-T_1\\right) \\quad (\\text{const. } P)' },
+          { latex: 'Q - W_b = mc_v\\left(T_2-T_1\\right) \\quad (\\text{const. } V,\\ W_b = 0)' },
+          { latex: 'Q = mc_p\\left(T_2-T_1\\right) \\quad (\\text{const. } P)' },
         ],
-        notes: 'Combines the closed-system energy balance with the ideal-gas relation ΔU = mc_vΔT.',
+        notes: 'Combines the closed-system energy balance with the ideal-gas relation ΔU = mc_vΔT. At constant P, W_b = mR(T₂−T₁) is already folded in, so Q (not Q − W_b) equals mc_pΔT.',
       },
       {
         id: 'aer309-card-first-law-rate-form',

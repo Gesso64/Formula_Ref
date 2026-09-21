@@ -1,12 +1,49 @@
 import { useState } from 'react'
-import { useCourses } from '@/hooks/useCourses'
+import { useCourses } from '@/hooks/courseModel'
 import { CourseEditor } from '@/components/courses/CourseEditor'
 import type { Course } from '@/types'
+
+const UNGROUPED = 'My Courses'
+const COLLAPSED_KEY = 'formula-ref:collapsed-groups'
+
+function loadCollapsed(): Set<string> {
+  try {
+    const raw = localStorage.getItem(COLLAPSED_KEY)
+    return raw ? new Set(JSON.parse(raw)) : new Set()
+  } catch {
+    return new Set()
+  }
+}
+
+function saveCollapsed(set: Set<string>) {
+  try { localStorage.setItem(COLLAPSED_KEY, JSON.stringify([...set])) } catch { /* ignore */ }
+}
+
+function groupCourses(courses: Course[]): { term: string; courses: Course[] }[] {
+  const order: string[] = []
+  const map = new Map<string, Course[]>()
+  for (const c of courses) {
+    const key = c.term ?? UNGROUPED
+    if (!map.has(key)) { map.set(key, []); order.push(key) }
+    map.get(key)!.push(c)
+  }
+  return order.map(term => ({ term, courses: map.get(term)! }))
+}
 
 export function Sidebar() {
   const { courses, activeCourse, setActiveCourseId, exportAll, importAll } = useCourses()
   const [newCourse, setNewCourse] = useState(false)
   const [editCourse, setEditCourse] = useState<Course | null>(null)
+  const [collapsed, setCollapsed] = useState<Set<string>>(loadCollapsed)
+
+  const toggleGroup = (term: string) => {
+    setCollapsed(prev => {
+      const next = new Set(prev)
+      if (next.has(term)) next.delete(term); else next.add(term)
+      saveCollapsed(next)
+      return next
+    })
+  }
 
   const handleImport = () => {
     const input = document.createElement('input')
@@ -15,16 +52,19 @@ export function Sidebar() {
     input.click()
   }
 
+  const groups = groupCourses(courses)
+
   return (
     <nav style={{ width: 200, minWidth: 200, flexShrink: 0, background: 'var(--color-surface)', borderRight: '0.5px solid var(--color-border2)', position: 'sticky', top: 0, height: '100dvh', overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
       <div style={{ padding: '16px 14px 10px', borderBottom: '0.5px solid var(--color-border)' }}>
-        <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-text3)', marginBottom: 10 }}>
-          TMU · Winter 2026
+        <div style={{ fontSize: 9.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--color-text3)', marginBottom: 12 }}>
+          TMU Formula Reference
         </div>
-        {courses.map(c => (
-          <CourseTab key={c.id} course={c} active={c.id === activeCourse?.id}
-            onClick={() => setActiveCourseId(c.id)}
-            onEdit={() => setEditCourse(c)} />
+        {groups.map(({ term, courses: groupCourses }) => (
+          <CourseGroup key={term} term={term} courses={groupCourses}
+            open={!collapsed.has(term)} onToggle={() => toggleGroup(term)}
+            activeCourseId={activeCourse?.id}
+            onSelect={setActiveCourseId} onEdit={setEditCourse} />
         ))}
         <button onClick={() => setNewCourse(true)}
           style={{ width: '100%', padding: '6px 10px', borderRadius: 7, border: '0.5px dashed var(--color-border2)', background: 'transparent', cursor: 'pointer', fontSize: 11.5, color: 'var(--color-text3)', textAlign: 'left', fontFamily: 'inherit' }}>
@@ -42,6 +82,35 @@ export function Sidebar() {
       {newCourse && <CourseEditor onClose={() => setNewCourse(false)} />}
       {editCourse && <CourseEditor course={editCourse} onClose={() => setEditCourse(null)} />}
     </nav>
+  )
+}
+
+function CourseGroup({ term, courses, open, onToggle, activeCourseId, onSelect, onEdit }: {
+  term: string
+  courses: Course[]
+  open: boolean
+  onToggle: () => void
+  activeCourseId?: string
+  onSelect: (id: string) => void
+  onEdit: (course: Course) => void
+}) {
+  return (
+    <div style={{ marginBottom: 8 }}>
+      <button onClick={onToggle}
+        style={{ display: 'flex', alignItems: 'center', gap: 5, width: '100%', padding: '4px 4px', marginBottom: 4, border: 'none', background: 'transparent', cursor: 'pointer', fontFamily: 'inherit' }}>
+        <span style={{ fontSize: 9, color: 'var(--color-text3)', transform: open ? 'rotate(90deg)' : 'none', transition: 'transform .15s', display: 'inline-block', width: 10 }}>
+          ▸
+        </span>
+        <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--color-text3)' }}>
+          {term}
+        </span>
+      </button>
+      {open && courses.map(c => (
+        <CourseTab key={c.id} course={c} active={c.id === activeCourseId}
+          onClick={() => onSelect(c.id)}
+          onEdit={() => onEdit(c)} />
+      ))}
+    </div>
   )
 }
 

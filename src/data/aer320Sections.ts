@@ -265,8 +265,8 @@ export const AER320_SECTIONS: Section[] = [
         title: 'Common 3D support reactions',
         tableRows: [
           { symbol: 'Ball-and-socket joint', value: '3 unknowns (Fx, Fy, Fz)', quantity: 'Force in any direction, no moment resisted' },
-          { symbol: 'Single journal bearing', value: '2 unknowns (⊥ force components)', quantity: 'Resists forces perpendicular to the shaft axis only' },
-          { symbol: 'Thrust bearing / pin', value: '3 unknowns (2 ⊥ forces + axial force)', quantity: 'Also resists force along the shaft axis' },
+          { symbol: 'Single journal bearing', value: '4 unknowns (2 ⊥ forces + 2 ⊥ moments)', quantity: 'Resists forces and bending moments perpendicular to the shaft axis' },
+          { symbol: 'Single thrust bearing', value: '5 unknowns (2 ⊥ forces + axial force + 2 ⊥ moments)', quantity: 'Also resists force along the shaft axis, plus perpendicular bending moments' },
           { symbol: 'Fixed support', value: '6 unknowns (Fx, Fy, Fz, Mx, My, Mz)', quantity: 'Resists all translation and rotation' },
           { symbol: 'Smooth surface / roller', value: '1 unknown (normal force)', quantity: 'Reaction perpendicular to the contact surface' },
         ],

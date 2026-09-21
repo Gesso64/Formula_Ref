@@ -195,7 +195,7 @@ export const AER318_SECTIONS: Section[] = [
           { latex: '\\dfrac{d^2u}{d\\theta^2} + u = -\\dfrac{F}{m h^2 u^2}, \\quad u = \\dfrac{1}{r}' },
           { latex: 'h = r^2\\dot{\\theta} = \\text{constant}' },
         ],
-        notes: '<strong>h</strong> = angular momentum per unit mass, constant for any central force. F is positive when directed toward the force center O.',
+        notes: '<strong>h</strong> = angular momentum per unit mass, constant for any central force. F is positive when directed away from the force center O (an attractive force like gravity is substituted as negative F).',
       },
     ],
   },

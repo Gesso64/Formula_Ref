@@ -132,7 +132,7 @@ export const MTH425_SECTIONS: Section[] = [
         title: "nth-order auxiliary equation — repeated roots",
         formula: "a_nm^n + a_{n-1}m^{n-1} + \\cdots + a_1m + a_0 = 0",
         formulaDisplay: true,
-        notes: "A real root m repeated k times contributes e^{mx}, xe^{mx}, …, x^{k-1}e^{mx}. A complex pair α ± βi repeated k times pairs each power of x with cos βx and sin βx.",
+        notes: "A real root m repeated k times contributes e^{mx}, xe^{mx}, …, x^{k-1}e^{mx}. A complex pair α ± βi repeated k times contributes e^{αx}x^{j}cos βx and e^{αx}x^{j}sin βx for j = 0, …, k−1.",
       },
       {
         id: "mth425-card-undetermined-coefficients",
@@ -195,7 +195,7 @@ export const MTH425_SECTIONS: Section[] = [
   },
   {
     id: "mth425-sec-laplace",
-    label: "Laplace Transforms (Zill 4.1, 4.2, 4.3, 4.6)",
+    label: "Laplace Transforms (Zill 4.1-4.5)",
     cat: "laplace",
     order: 2,
     cards: [
@@ -341,7 +341,7 @@ export const MTH425_SECTIONS: Section[] = [
   },
   {
     id: "mth425-sec-space-curves",
-    label: "Vector Functions & Space Curves (Zill 9.1)",
+    label: "Vector Functions & Space Curves (Zill 9.1-9.3)",
     cat: "space-curves",
     order: 3,
     cards: [

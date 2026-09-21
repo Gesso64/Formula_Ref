@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { v4 as uuid } from 'uuid'
-import { useCourses } from '@/hooks/useCourses'
+import { useCourses } from '@/hooks/courseModel'
 import { Overlay, ModalHeader } from '@/components/cards/CardEditor'
 import type { Section } from '@/types'
 
