@@ -1,6 +1,11 @@
 import type { Course } from '@/types'
 import { PCS125_W18_EXAMPLES } from './pcs125Examples'
 import { ECN801_EXAMPLES } from './ecn801Examples'
+import { AER309_SECTIONS } from './aer309Sections'
+import { AER316_SECTIONS } from './aer316Sections'
+import { AER318_SECTIONS } from './aer318Sections'
+import { AER320_SECTIONS } from './aer320Sections'
+import { MTH425_SECTIONS } from './mth425Sections'
 
 // Helper to make a card id deterministic
 let _cid = 0
@@ -1112,5 +1117,70 @@ export const DEFAULT_COURSES: Course[] = [
       },
     ],
     examples: ECN801_EXAMPLES,
+  },
+  // ─── AER309 ────────────────────────────────────────────────────────────────
+  {
+    id: 'default-aer309',
+    code: 'AER309',
+    name: 'Basic Thermodynamics',
+    description: 'Chapters 1–7, 9 · Cengel, Boles & Kanoglu, 10th edition',
+    accent: '#dc2626', accentBg: '#fee2e2', accentFg: '#7f1d1d',
+    accentBgDark: '#450a0a', accentFgDark: '#fca5a5',
+    isDefault: true,
+    createdAt: '2026-09-08T00:00:00Z',
+    updatedAt: '2026-09-08T00:00:00Z',
+    sections: AER309_SECTIONS,
+  },
+  // ─── AER316 ────────────────────────────────────────────────────────────────
+  {
+    id: 'default-aer316',
+    code: 'AER316',
+    name: 'Fluid Mechanics',
+    description: 'Chapters 1–10 · Crowe, Elger, Williams & Roberson, 12th edition',
+    accent: '#0891b2', accentBg: '#cffafe', accentFg: '#164e63',
+    accentBgDark: '#083344', accentFgDark: '#67e8f9',
+    isDefault: true,
+    createdAt: '2026-09-08T00:00:00Z',
+    updatedAt: '2026-09-08T00:00:00Z',
+    sections: AER316_SECTIONS,
+  },
+  // ─── AER318 ────────────────────────────────────────────────────────────────
+  {
+    id: 'default-aer318',
+    code: 'AER318',
+    name: 'Dynamics',
+    description: 'Chapters 12–19 · Hibbeler, Engineering Mechanics: Dynamics, 16th edition',
+    accent: '#db2777', accentBg: '#fce7f3', accentFg: '#831843',
+    accentBgDark: '#500724', accentFgDark: '#f9a8d4',
+    isDefault: true,
+    createdAt: '2026-09-08T00:00:00Z',
+    updatedAt: '2026-09-08T00:00:00Z',
+    sections: AER318_SECTIONS,
+  },
+  // ─── AER320 ────────────────────────────────────────────────────────────────
+  {
+    id: 'default-aer320',
+    code: 'AER320',
+    name: 'Statics & Intro. to Strength of Materials',
+    description: 'Hibbeler, Engineering Mechanics: Statics, 15th ed. & Mechanics of Materials, 11th ed.',
+    accent: '#475569', accentBg: '#e2e8f0', accentFg: '#1e293b',
+    accentBgDark: '#0f172a', accentFgDark: '#cbd5e1',
+    isDefault: true,
+    createdAt: '2026-09-08T00:00:00Z',
+    updatedAt: '2026-09-08T00:00:00Z',
+    sections: AER320_SECTIONS,
+  },
+  // ─── MTH425 ────────────────────────────────────────────────────────────────
+  {
+    id: 'default-mth425',
+    code: 'MTH425',
+    name: 'Differential Equations & Vector Calculus',
+    description: 'Zill, Advanced Engineering Mathematics, 7th edition',
+    accent: '#65a30d', accentBg: '#ecfccb', accentFg: '#365314',
+    accentBgDark: '#1a2e05', accentFgDark: '#bef264',
+    isDefault: true,
+    createdAt: '2026-09-08T00:00:00Z',
+    updatedAt: '2026-09-08T00:00:00Z',
+    sections: MTH425_SECTIONS,
   },
 ]
