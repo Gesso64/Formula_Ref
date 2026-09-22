@@ -1136,7 +1136,8 @@ export const DEFAULT_COURSES: Course[] = [
     updatedAt: '2026-09-08T00:00:00Z',
     sections: AER309_SECTIONS,
     sheets: [
-      { label: 'Memorization Sheet', file: 'aer309-memorization.pdf' },
+      { label: 'Midterm Sheet', file: 'aer309-midterm.pdf' },
+      { label: 'Final Sheet', file: 'aer309-final.pdf' },
     ],
   },
   // ─── AER316 ────────────────────────────────────────────────────────────────
@@ -1189,8 +1190,8 @@ export const DEFAULT_COURSES: Course[] = [
     updatedAt: '2026-09-08T00:00:00Z',
     sections: AER320_SECTIONS,
     sheets: [
-      { label: 'Statics Sheet', file: 'aer320-statics.pdf' },
-      { label: 'Strength of Materials Sheet', file: 'aer320-strength.pdf' },
+      { label: 'Midterm Sheet', file: 'aer320-midterm.pdf' },
+      { label: 'Final Sheet', file: 'aer320-final.pdf' },
     ],
   },
   // ─── MTH425 ────────────────────────────────────────────────────────────────
@@ -1207,7 +1208,8 @@ export const DEFAULT_COURSES: Course[] = [
     updatedAt: '2026-09-08T00:00:00Z',
     sections: MTH425_SECTIONS,
     sheets: [
-      { label: 'Memorization Sheet', file: 'mth425-memorization.pdf' },
+      { label: 'Midterm Sheet', file: 'mth425-midterm.pdf' },
+      { label: 'Final Sheet', file: 'mth425-final.pdf' },
     ],
   },
 ]
