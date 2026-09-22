@@ -35,12 +35,18 @@ export interface Section {
   order: number;
 }
 
+export interface FormulaSheet {
+  label: string;   // e.g. "Midterm Sheet"
+  file: string;    // filename under public/formula-sheets/
+}
+
 export interface Course {
   id: string;
   code: string;
   name: string;
   description: string;
   term?: string;  // sidebar grouping label, e.g. "Year 1 · Winter 2026"
+  sheets?: FormulaSheet[];  // condensed printable PDF sheets for this course
   accent: string;
   accentBg: string;
   accentFg: string;

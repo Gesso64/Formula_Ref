@@ -100,6 +100,22 @@ function CardGridForCourse({ course: activeCourse }: { course: Course }) {
           )}
         </div>
         <div style={{ fontSize: 12, color: 'var(--color-text2)' }}>{activeCourse.description}</div>
+        {activeCourse.sheets && activeCourse.sheets.length > 0 && (
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 8 }}>
+            {activeCourse.sheets.map(sheet => (
+              <a key={sheet.file}
+                href={`${import.meta.env.BASE_URL}formula-sheets/${sheet.file}`}
+                target="_blank" rel="noopener noreferrer"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 5, fontSize: 11.5, fontWeight: 500,
+                  padding: '5px 11px', borderRadius: 99, textDecoration: 'none',
+                  border: `0.5px solid ${activeCourse.accent}`, background: activeCourse.accentBg, color: activeCourse.accentFg,
+                }}>
+                <span aria-hidden>📄</span> {sheet.label}
+              </a>
+            ))}
+          </div>
+        )}
       </div>
 
       {mode === 'examples' ? (
