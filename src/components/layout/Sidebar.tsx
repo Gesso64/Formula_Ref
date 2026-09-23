@@ -1,34 +1,8 @@
 import { useState } from 'react'
 import { useCourses } from '@/hooks/courseModel'
 import { CourseEditor } from '@/components/courses/CourseEditor'
+import { groupCourses, loadCollapsed, saveCollapsed } from '@/lib/courseGroups'
 import type { Course } from '@/types'
-
-const UNGROUPED = 'My Courses'
-const COLLAPSED_KEY = 'formula-ref:collapsed-groups'
-
-function loadCollapsed(): Set<string> {
-  try {
-    const raw = localStorage.getItem(COLLAPSED_KEY)
-    return raw ? new Set(JSON.parse(raw)) : new Set()
-  } catch {
-    return new Set()
-  }
-}
-
-function saveCollapsed(set: Set<string>) {
-  try { localStorage.setItem(COLLAPSED_KEY, JSON.stringify([...set])) } catch { /* ignore */ }
-}
-
-function groupCourses(courses: Course[]): { term: string; courses: Course[] }[] {
-  const order: string[] = []
-  const map = new Map<string, Course[]>()
-  for (const c of courses) {
-    const key = c.term ?? UNGROUPED
-    if (!map.has(key)) { map.set(key, []); order.push(key) }
-    map.get(key)!.push(c)
-  }
-  return order.map(term => ({ term, courses: map.get(term)! }))
-}
 
 export function Sidebar() {
   const { courses, activeCourse, setActiveCourseId, exportAll, importAll } = useCourses()
