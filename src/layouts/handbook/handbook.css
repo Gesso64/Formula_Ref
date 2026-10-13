@@ -37,31 +37,29 @@
   color-scheme: light;
 }
 
-@media (prefers-color-scheme: dark) {
-  .hb-root {
-    --hb-bg: #141413;
-    --hb-rail: #191918;
-    --hb-surface: #1e1e1c;
-    --hb-ink: #ecebe5;
-    --hb-ink2: #b4b3ac;
-    --hb-ink3: #7d7c76;
-    --hb-rule: #2a2a27;
-    --hb-rule-strong: #3b3b37;
-    --hb-hover: rgba(255, 255, 250, 0.05);
-    --hb-acc: var(--hb-a-fg-d);
-    --hb-acc-ink: var(--hb-a-fg-d);
-    --hb-acc-soft: var(--hb-a-bg-d);
-    --hb-acc-tint: color-mix(in srgb, var(--hb-a-fg-d) 10%, transparent);
-    --hb-mark: rgba(250, 204, 21, 0.38);
-    --hb-mark-soft: rgba(250, 204, 21, 0.09);
-    --hb-mark-line: #ca8a04;
-    --hb-flash: color-mix(in srgb, var(--hb-a-fg-d) 10%, transparent);
-    color-scheme: dark;
-  }
+:root[data-theme="dark"] .hb-root {
+  --hb-bg: #141413;
+  --hb-rail: #191918;
+  --hb-surface: #1e1e1c;
+  --hb-ink: #ecebe5;
+  --hb-ink2: #b4b3ac;
+  --hb-ink3: #7d7c76;
+  --hb-rule: #2a2a27;
+  --hb-rule-strong: #3b3b37;
+  --hb-hover: rgba(255, 255, 250, 0.05);
+  --hb-acc: var(--hb-a-fg-d);
+  --hb-acc-ink: var(--hb-a-fg-d);
+  --hb-acc-soft: var(--hb-a-bg-d);
+  --hb-acc-tint: color-mix(in srgb, var(--hb-a-fg-d) 10%, transparent);
+  --hb-mark: rgba(250, 204, 21, 0.38);
+  --hb-mark-soft: rgba(250, 204, 21, 0.09);
+  --hb-mark-line: #ca8a04;
+  --hb-flash: color-mix(in srgb, var(--hb-a-fg-d) 10%, transparent);
+  color-scheme: dark;
 }
 
 .hb-body { background: #fcfcfb; }
-@media (prefers-color-scheme: dark) { .hb-body { background: #141413; } }
+:root[data-theme="dark"] .hb-body { background: #141413; }
 
 /* ───────────────────────────── Frame ───────────────────────────── */
 
