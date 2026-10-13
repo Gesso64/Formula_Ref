@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect, useLayoutEffect, useCallback, type CSSProperties } from 'react'
 import { useCourses } from '@/hooks/courseModel'
 import { groupCourses } from '@/lib/courseGroups'
+import { useTheme } from '@/lib/theme'
 import { CardEditor } from '@/components/cards/CardEditor'
 import { SectionEditor } from '@/components/courses/SectionEditor'
 import { CourseEditor } from '@/components/courses/CourseEditor'
@@ -16,6 +17,7 @@ import { Menu, MenuHeading, MenuSep } from './Menu'
 import {
   IconChevronDown, IconSearch, IconClose, IconMore, IconPencil, IconPlus, IconDownload, IconUpload,
   IconPrint, IconFile, IconArrowUpRight, IconCheck, IconDensityCompact, IconDensityComfortable, IconMark, IconSettings,
+  IconSun, IconMoon,
 } from './icons'
 import './sheet.css'
 
@@ -92,6 +94,7 @@ export default function SheetLayout() {
   const { courses, activeCourse, setActiveCourseId, exportAll, importAll } = useCourses()
   const vp = useViewport()
   const mobile = vp.w < MOBILE_BP
+  const { theme, toggle: toggleTheme } = useTheme()
 
   const [density, setDensity] = useState<Density>(loadDensity)
   const [editing, setEditing] = useState(false)
@@ -546,6 +549,10 @@ export default function SheetLayout() {
                   <IconPencil size={14} />{editing ? 'Done' : 'Edit'}
                 </button>
               )}
+              <button type="button" className="sh-iconbtn" onClick={toggleTheme}
+                aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'} title="Toggle light/dark theme">
+                {theme === 'dark' ? <IconSun size={16} /> : <IconMoon size={16} />}
+              </button>
               {overflowMenu}
             </>
           )}

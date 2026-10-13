@@ -39,3 +39,5 @@ export const IconMark = (p: P) => (
     <path d="M5.25 9h3M9.75 9h3M5.25 12h3M9.75 12h3" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
   </svg>
 )
+export const IconSun = (p: P) => <Svg {...p}><circle cx="8" cy="8" r="2.75" /><path d="M8 1.5v1.5M8 13v1.5M1.5 8H3M13 8h1.5M3.4 3.4l1.06 1.06M11.54 11.54l1.06 1.06M3.4 12.6l1.06-1.06M11.54 4.46l1.06-1.06" /></Svg>
+export const IconMoon = (p: P) => <Svg {...p}><path d="M13.25 9.75A5.5 5.5 0 0 1 6.25 2.75a5.5 5.5 0 1 0 7 7z" /></Svg>

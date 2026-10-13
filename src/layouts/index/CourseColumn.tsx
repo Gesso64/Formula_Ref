@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { groupCourses } from '@/lib/courseGroups'
 import type { Course } from '@/types'
 import { isMac } from './hooks'
+import { ThemeButton } from './ThemeButton'
 import { ChevronRight, DownloadIcon, MoreIcon, PencilIcon, PlusIcon, SearchIcon, UploadIcon } from './icons'
 
 interface Props {
@@ -93,6 +94,7 @@ export function CourseColumn(p: Props) {
           <span>Edit mode</span>
           <span className="ix-switch" aria-hidden="true"><span /></span>
         </button>
+        <ThemeButton />
         <DataMenu onExport={p.onExport} onImport={p.onImport} onNewCourse={p.onNewCourse} />
       </div>
     </nav>

@@ -9,6 +9,7 @@ import { CourseColumn } from './CourseColumn'
 import { FormulaList } from './FormulaList'
 import { DetailPane } from './DetailPane'
 import { Palette } from './Palette'
+import { ThemeButton } from './ThemeButton'
 import { buildIndex, flattenCourse, formatHash, parseHash, rowId, splitSectionLabel, sortedCards, type SearchDoc, type Selection } from './model'
 import { isTypingTarget, useMediaQuery } from './hooks'
 import { ChevronLeft, ChevronDown, ChevronUp, PlusIcon, SearchIcon } from './icons'
@@ -217,6 +218,7 @@ export default function IndexLayout() {
               {current ? (current.kind === 'card' ? splitSectionLabel(current.section.label).main : 'Worked examples') : 'Overview'}
             </span>
           )}
+          <ThemeButton />
         </header>
       )}
 
