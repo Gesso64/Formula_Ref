@@ -553,8 +553,8 @@ body.sh-bodybg { background: #fbfbf9; }
 
 @media print {
   @page { margin: 11mm 10mm; }
-  body.sh-bodybg { background: #fff; }
-  .sh-root {
+  :root[data-theme] body.sh-bodybg { background: #fff; }
+  :root[data-theme] .sh-root {
     --sh-paper: #fff; --sh-ink: #000; --sh-ink2: #333; --sh-ink3: #666;
     --sh-rule: #d6d6d6; --sh-rule2: #aaa; --sh-band: #26324a; --sh-band-ink: #fff; --sh-band-ink2: #c4cbd8;
     --sh-shade: #e9edf4; --sh-shade-ink: #000;

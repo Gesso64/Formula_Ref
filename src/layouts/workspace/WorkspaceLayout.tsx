@@ -1,3 +1,6 @@
+import SheetLayout from '@/layouts/sheet/SheetLayout'
+
+/** Workspace: Index's course rail around the sheet, a focus view, and a pinned “My sheet”. */
 export default function WorkspaceLayout() {
-  return <div style={{ padding: 24 }}>Workspace layout — work in progress</div>
+  return <SheetLayout variant="workspace" />
 }

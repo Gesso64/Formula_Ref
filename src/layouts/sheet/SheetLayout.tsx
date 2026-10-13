@@ -12,12 +12,21 @@ import {
   paginate, pagesKey, loadDensity, saveDensity,
 } from './model'
 import { Entry } from './Entry'
+import { loadPins, savePins, type Pin } from './pins'
+// The combined layouts (inspector, workspace) borrow Index's detail pane, palette and course rail.
+import { DetailPane } from '@/layouts/index/DetailPane'
+import { Palette } from '@/layouts/index/Palette'
+import { CourseColumn } from '@/layouts/index/CourseColumn'
+import { buildIndex, flattenCourse, type SearchDoc, type Selection } from '@/layouts/index/model'
+import { loadCollapsed, saveCollapsed } from '@/lib/courseGroups'
+import '@/layouts/index/IndexLayout.css'
+import './combo.css'
 import { ExampleBlock } from './Examples'
 import { Menu, MenuHeading, MenuSep } from './Menu'
 import {
   IconChevronDown, IconSearch, IconClose, IconMore, IconPencil, IconPlus, IconDownload, IconUpload,
   IconPrint, IconFile, IconArrowUpRight, IconCheck, IconDensityCompact, IconDensityComfortable, IconMark, IconSettings,
-  IconSun, IconMoon,
+  IconSun, IconMoon, IconPin,
 } from './icons'
 import './sheet.css'
 
@@ -90,11 +99,22 @@ function measureHeights(root: HTMLElement): Heights {
 
 interface VisibleSection { section: Section; num: number; cards: Card[]; wide: boolean }
 
-export default function SheetLayout() {
+/** 'sheet' = the plain sheet; 'inspector' = sheet + docked detail panel; 'workspace' = course rail + focus view + My sheet. */
+export type SheetVariant = 'sheet' | 'inspector' | 'workspace'
+
+const EMPTY_NUMBERS = new Map<string, number>()
+const DOCK_BP = 1100   // inspector docks beside the sheet at or above this width
+const RAIL_BP = 1024   // workspace shows the course rail at or above this width
+
+export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVariant }) {
   const { courses, activeCourse, setActiveCourseId, exportAll, importAll } = useCourses()
   const vp = useViewport()
   const mobile = vp.w < MOBILE_BP
   const { theme, toggle: toggleTheme } = useTheme()
+  const combo = variant !== 'sheet'
+  const isWorkspace = variant === 'workspace'
+  const docked = variant === 'inspector' && vp.w >= DOCK_BP
+  const railed = isWorkspace && vp.w >= RAIL_BP
 
   const [density, setDensity] = useState<Density>(loadDensity)
   const [editing, setEditing] = useState(false)
@@ -107,6 +127,12 @@ export default function SheetLayout() {
   const [editCard, setEditCard] = useState<{ section: Section; card?: Card } | null>(null)
   const [editSection, setEditSection] = useState<{ section?: Section; order: number } | null>(null)
   const [editCourse, setEditCourse] = useState<{ course?: Course } | null>(null)
+  const [insp, setInsp] = useState<{ courseId: string; sel: Selection | null } | null>(null)
+  const [paletteOpen, setPaletteOpen] = useState(false)
+  const [pins, setPins] = useState<Pin[]>(loadPins)
+  const [mySheet, setMySheet] = useState(false)
+  const [collapsed, setCollapsed] = useState<Set<string>>(loadCollapsed)
+  const [headH, setHeadH] = useState(92)
 
   const headRef = useRef<HTMLDivElement>(null)
   const stripRef = useRef<HTMLDivElement>(null)
@@ -115,6 +141,14 @@ export default function SheetLayout() {
   const savedScroll = useRef<Record<Mode, number>>({ formulas: 0, examples: 0 })
   const flashTimer = useRef(0)
   const [sheetRef, sheetW] = useElementWidth<HTMLDivElement>()
+
+  useEffect(() => {
+    const el = headRef.current
+    if (!el) return
+    const ro = new ResizeObserver(() => setHeadH(el.offsetHeight))
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   useEffect(() => {
     document.body.classList.add('sh-bodybg')
@@ -191,7 +225,7 @@ export default function SheetLayout() {
     : paginate(flow, null, cols, colH)
 
   useLayoutEffect(() => {
-    if (effMode !== 'formulas') return
+    if (effMode !== 'formulas' || mySheet) return
     let cancelled = false
     const run = () => {
       const root = sheetRef.current
@@ -205,7 +239,7 @@ export default function SheetLayout() {
     const raf = requestAnimationFrame(run)
     document.fonts?.ready.then(() => requestAnimationFrame(run))
     return () => { cancelled = true; cancelAnimationFrame(raf) }
-  }, [flow, cols, colH, sig, effMode, sheetRef, sheetW])
+  }, [flow, cols, colH, sig, effMode, mySheet, sheetRef, sheetW])
 
   useLayoutEffect(() => {
     if (effMode !== 'examples') return
@@ -300,6 +334,7 @@ export default function SheetLayout() {
   }, [effMode])
 
   const switchMode = (m: Mode) => {
+    if (mySheet) { setMySheet(false); setMode(m); window.scrollTo({ top: 0 }); return }
     if (m === effMode) return
     savedScroll.current[effMode] = window.scrollY
     pendingRestore.current = savedScroll.current[m]
@@ -315,6 +350,7 @@ export default function SheetLayout() {
 
   const switchCourse = (id: string, keepQuery = false) => {
     if (!keepQuery) setQuery('')
+    setMySheet(false)
     setMode('formulas')
     setInView([])
     savedScroll.current = { formulas: 0, examples: 0 }
@@ -329,19 +365,119 @@ export default function SheetLayout() {
     if (section) setEditCard({ section, card })
   }, [course])
 
-  /* Keyboard: "/" focuses search. */
+  /* ── Combined layouts: inspector / focus view, palette, pins ─────────── */
+
+  const items = useMemo(() => (combo && course ? flattenCourse(course) : []), [combo, course])
+  const inspOpen = !!insp && !!course && insp.courseId === course.id
+  const inspSel = inspOpen ? insp!.sel : null
+  const inspIdx = inspSel ? items.findIndex(i => i.kind === inspSel.kind && i.id === inspSel.id) : -1
+  const closeInsp = useCallback(() => setInsp(null), [])
+
+  const openCard = useCallback((card: Card) => {
+    if (course) setInsp({ courseId: course.id, sel: { kind: 'card', id: card.id } })
+  }, [course])
+
+  const selectItem = useCallback((sel: Selection | null) => {
+    if (course) setInsp({ courseId: course.id, sel })
+  }, [course])
+
+  /* Keep the selected entry visible in the sheet behind the docked panel. */
+  useEffect(() => {
+    if (!docked || inspSel?.kind !== 'card' || mySheet || effMode !== 'formulas') return
+    const el = document.querySelector(`.sh-root [data-card="${CSS.escape(inspSel.id)}"]`)
+    if (!el) return
+    const r = el.getBoundingClientRect()
+    if (r.top < headH || r.bottom > window.innerHeight) scrollToEl(el)
+  }, [docked, inspSel, mySheet, effMode, headH, scrollToEl])
+
+  const searchIndex = useMemo(() => (combo ? buildIndex(courses) : []), [combo, courses])
+
+  const pickResult = (doc: SearchDoc) => {
+    setPaletteOpen(false)
+    if (doc.course.id !== course?.id) switchCourse(doc.course.id)
+    else if (mySheet) setMySheet(false)
+    if (doc.kind === 'section' && doc.sectionId) {
+      const id = doc.sectionId
+      window.setTimeout(() => jumpToSection(id), 120)
+    } else if (doc.sel) {
+      setInsp({ courseId: doc.course.id, sel: doc.sel })
+    }
+  }
+
+  const pinnedIds = useMemo(() => new Set(pins.map(p => p.cardId)), [pins])
+  const togglePin = useCallback((card: Card) => {
+    if (!course) return
+    setPins(prev => {
+      const next = prev.some(p => p.cardId === card.id)
+        ? prev.filter(p => p.cardId !== card.id)
+        : [...prev, { courseId: course.id, cardId: card.id }]
+      savePins(next)
+      return next
+    })
+  }, [course])
+  const unpin = useCallback((card: Card) => {
+    setPins(prev => { const next = prev.filter(p => p.cardId !== card.id); savePins(next); return next })
+  }, [])
+
+  /* Pinned entries resolved against current data, grouped by course then section. */
+  const pinnedGroups = useMemo(() => {
+    if (!isWorkspace) return []
+    const ids = new Set(pins.map(p => p.cardId))
+    const out: { course: Course; section: Section; cards: Card[] }[] = []
+    for (const c of courses) {
+      for (const sec of [...c.sections].sort((a, b) => a.order - b.order)) {
+        const cards = sortedCards(sec).filter(card => ids.has(card.id))
+        if (cards.length) out.push({ course: c, section: sec, cards })
+      }
+    }
+    return out
+  }, [isWorkspace, pins, courses])
+  const pinCount = pinnedGroups.reduce((n, g) => n + g.cards.length, 0)
+
+  const toggleGroup = (term: string) => {
+    setCollapsed(prev => {
+      const next = new Set(prev)
+      if (next.has(term)) next.delete(term); else next.add(term)
+      saveCollapsed(next)
+      return next
+    })
+  }
+
+  /* Keyboard for the combined layouts: ⌘K / Ctrl+K palette; Esc, j/k and arrows in the detail view. */
+  useEffect(() => {
+    if (!combo) return
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setPaletteOpen(o => !o); return }
+      if (!inspOpen || paletteOpen || e.metaKey || e.ctrlKey || e.altKey) return
+      if ((e.target as HTMLElement).closest('input, textarea, select, [contenteditable="true"], [role="dialog"]')) return
+      const step = (d: number) => {
+        e.preventDefault()
+        const i = Math.max(0, Math.min(items.length - 1, (inspIdx < 0 ? -1 : inspIdx) + d))
+        const it = items[i]
+        if (it) selectItem({ kind: it.kind, id: it.id })
+      }
+      if (e.key === 'Escape') { e.preventDefault(); closeInsp() }
+      else if (e.key === 'j' || e.key === 'ArrowDown' || (isWorkspace && e.key === 'ArrowRight')) step(1)
+      else if (e.key === 'k' || e.key === 'ArrowUp' || (isWorkspace && e.key === 'ArrowLeft')) step(-1)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [combo, inspOpen, paletteOpen, items, inspIdx, isWorkspace, selectItem, closeInsp])
+
+  /* Keyboard: "/" focuses search (opens the palette in the combined layouts). */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const t = e.target as HTMLElement
       if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return
       if (t.closest('input, textarea, select, [contenteditable="true"]')) return
       e.preventDefault()
+      if (combo) { setPaletteOpen(true); return }
       if (mobile) setSearchOpen(true)
       requestAnimationFrame(() => searchRef.current?.focus())
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [mobile])
+  }, [mobile, combo])
 
   const onImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]
@@ -357,7 +493,14 @@ export default function SheetLayout() {
     '--sh-acc-bg-d': course.accentBgDark, '--sh-acc-fg-d': course.accentFgDark,
   } as CSSProperties : undefined
 
-  const rootCls = ['sh-root', `sh-${density}`, mobile ? 'sh-is-mobile' : 'sh-is-desktop', editing ? 'sh-is-editing' : ''].join(' ')
+  const ixAccent = course ? {
+    '--ix-a-l': course.accent, '--ix-a-d': course.accentFgDark,
+    '--ix-abg-l': course.accentBg, '--ix-abg-d': course.accentBgDark,
+    '--ix-afg-l': course.accentFg, '--ix-afg-d': course.accentFgDark,
+  } as CSSProperties : undefined
+
+  const rootCls = ['sh-root', `sh-${density}`, mobile ? 'sh-is-mobile' : 'sh-is-desktop', editing ? 'sh-is-editing' : '',
+    `sh-v-${variant}`, docked && inspOpen ? 'sh-insp-docked' : '', railed ? 'sh-railed' : ''].join(' ')
 
   const courseMenu = (
     <Menu label="Choose course" sheet={mobile} className="sh-coursemenu"
@@ -486,17 +629,36 @@ export default function SheetLayout() {
     </div>
   )
 
-  const modeSwitch = hasExamples && (
+  const paletteTrigger = mobile ? (
+    <button type="button" className="sh-iconbtn" aria-label="Search all courses" onClick={() => setPaletteOpen(true)}>
+      <IconSearch size={16} />
+    </button>
+  ) : (
+    <button type="button" className="sh-search sh-search--btn" onClick={() => setPaletteOpen(true)} aria-label="Search all courses">
+      <IconSearch size={15} className="sh-search-icon" />
+      <span className="sh-search-ph">Search all courses…</span>
+      <kbd className="sh-kbd" aria-hidden="true">{/Mac|iPhone|iPad/.test(navigator.platform) ? '⌘K' : 'Ctrl K'}</kbd>
+    </button>
+  )
+
+  const modeSwitch = (hasExamples || isWorkspace) && (
     <div className="sh-seg" role="group" aria-label="View">
-      <button type="button" aria-pressed={effMode === 'formulas'} onClick={() => switchMode('formulas')}>Formulas</button>
-      <button type="button" aria-pressed={effMode === 'examples'} onClick={() => switchMode('examples')}>
-        {mobile ? 'Examples' : 'Worked Examples'}
-      </button>
+      <button type="button" aria-pressed={!mySheet && effMode === 'formulas'} onClick={() => switchMode('formulas')}>Formulas</button>
+      {hasExamples && (
+        <button type="button" aria-pressed={!mySheet && effMode === 'examples'} onClick={() => switchMode('examples')}>
+          {mobile || isWorkspace ? 'Examples' : 'Worked Examples'}
+        </button>
+      )}
+      {isWorkspace && (
+        <button type="button" aria-pressed={mySheet} onClick={() => { setMySheet(true); setInsp(null); window.scrollTo({ top: 0 }) }}>
+          My sheet{pinCount > 0 && <span className="sh-seg-count">{pinCount}</span>}
+        </button>
+      )}
     </div>
   )
 
   return (
-    <div className={rootCls} style={accentStyle}>
+    <div className={rootCls} style={{ ...accentStyle, '--sh-head-h': `${headH}px` } as CSSProperties}>
       <input ref={fileRef} type="file" accept=".json,application/json" hidden onChange={onImport} />
 
       <div className="sh-head" ref={headRef}>
@@ -509,12 +671,12 @@ export default function SheetLayout() {
             </div>
           ) : (
             <>
-              {!mobile && (
-                <a className="sh-mark" href={`${import.meta.env.BASE_URL}?layout=sheet`} aria-label="Formula Ref home">
+              {!mobile && !railed && (
+                <a className="sh-mark" href={`${import.meta.env.BASE_URL}?layout=${variant}`} aria-label="Formula Ref home">
                   <IconMark size={18} /><span>Formula Ref</span>
                 </a>
               )}
-              {courseMenu}
+              {!railed && courseMenu}
               {!mobile && sheetLinks.length > 0 && (
                 <nav className="sh-sheets" aria-label="Printable PDF sheets">
                   {sheetLinks.map(s => (
@@ -528,7 +690,7 @@ export default function SheetLayout() {
               )}
               <div className="sh-bar-spacer" />
               {modeSwitch}
-              {mobile ? (
+              {combo ? paletteTrigger : mobile ? (
                 <button type="button" className="sh-iconbtn" aria-label="Search" onClick={() => {
                   setSearchOpen(true); requestAnimationFrame(() => searchRef.current?.focus())
                 }}>
@@ -543,23 +705,23 @@ export default function SheetLayout() {
                     onClick={() => changeDensity('comfortable')}><IconDensityComfortable size={15} /></button>
                 </div>
               )}
-              {!mobile && (
+              {!mobile && !railed && (
                 <button type="button" className={`sh-textbtn sh-editbtn${editing ? ' is-on' : ''}`} aria-pressed={editing}
                   onClick={() => setEditing(e => !e)}>
                   <IconPencil size={14} />{editing ? 'Done' : 'Edit'}
                 </button>
               )}
-              <button type="button" className="sh-iconbtn" onClick={toggleTheme}
+              {!railed && <button type="button" className="sh-iconbtn" onClick={toggleTheme}
                 aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'} title="Toggle light/dark theme">
                 {theme === 'dark' ? <IconSun size={16} /> : <IconMoon size={16} />}
-              </button>
+              </button>}
               {overflowMenu}
             </>
           )}
         </header>
 
         {/* ── Section index strip ── */}
-        {course && (
+        {course && !mySheet && (
           <nav className="sh-strip" aria-label={effMode === 'formulas' ? 'Sections' : 'Worked examples'}>
             <div className="sh-strip-inner" ref={stripRef}>
               {effMode === 'formulas'
@@ -611,6 +773,48 @@ export default function SheetLayout() {
               <IconPlus size={13} />New course
             </button>
           </div>
+        ) : mySheet ? (
+          <>
+            <div className="sh-titleblock">
+              <div className="sh-tb-row">
+                <h1 className="sh-tb-name sh-tb-name--solo">My sheet</h1>
+                <span className="sh-tb-kind">{pinCount} pinned {pinCount === 1 ? 'entry' : 'entries'}</span>
+                {pinCount > 0 && (
+                  <button type="button" className="sh-textbtn sh-mysheet-print" onClick={() => window.print()}>
+                    <IconPrint size={14} />Print
+                  </button>
+                )}
+              </div>
+              <div className="sh-tb-meta"><span>Formulas pinned from any course, kept in this browser.</span></div>
+            </div>
+            {pinCount === 0 ? (
+              <div className="sh-noresults">
+                <p>Nothing pinned yet. Use <strong>Pin</strong> on any entry to collect formulas from every course on one sheet.</p>
+              </div>
+            ) : (
+              <div className="sh-page" style={{ columnCount: cols }}>
+                {pinnedGroups.map(g => {
+                  const { title } = splitLabel(g.section.label)
+                  const entry = (c: Card) => (
+                    <Entry key={c.id} card={c} editing={false} onEdit={onEditCard} exampleNumbers={EMPTY_NUMBERS}
+                      onExample={openExample} pinned onPin={unpin} />
+                  )
+                  return (
+                    <section key={g.section.id} className="sh-sec" aria-label={`${g.course.code} ${title}`}>
+                      <div className="sh-keep">
+                        <header className="sh-band">
+                          <span className="sh-band-num sh-band-code">{g.course.code}</span>
+                          <h2 className="sh-band-title">{title}</h2>
+                        </header>
+                        {entry(g.cards[0])}
+                      </div>
+                      {g.cards.slice(1).map(entry)}
+                    </section>
+                  )
+                })}
+              </div>
+            )}
+          </>
         ) : (
           <>
             <div className="sh-titleblock">
@@ -640,7 +844,9 @@ export default function SheetLayout() {
                       const cards = v.cards.slice(part.start, part.end)
                       const entry = (c: Card) => (
                         <Entry key={c.id} card={c} editing={editing} onEdit={onEditCard}
-                          exampleNumbers={exampleNumbers} onExample={openExample} />
+                          exampleNumbers={exampleNumbers} onExample={openExample}
+                          onOpen={combo ? openCard : undefined} selected={inspSel?.kind === 'card' && inspSel.id === c.id}
+                          pinned={pinnedIds.has(c.id)} onPin={isWorkspace ? togglePin : undefined} />
                       )
                       return (
                         <section key={`${part.id}-${part.start}`} className="sh-sec" data-part="" data-sec={part.id}
@@ -713,6 +919,55 @@ export default function SheetLayout() {
           </>
         )}
       </main>
+
+      {/* ── Workspace course rail (Index's course column) ── */}
+      {railed && (
+        <div className="ix-root sh-rail" style={ixAccent}>
+          <CourseColumn courses={courses} activeCourseId={course?.id ?? null} onSelectCourse={id => switchCourse(id)}
+            collapsed={collapsed} onToggleGroup={toggleGroup} onOpenSearch={() => setPaletteOpen(true)}
+            editMode={editing} onToggleEdit={() => setEditing(e => !e)}
+            onExport={() => void exportAll()} onImport={() => fileRef.current?.click()}
+            onNewCourse={() => setEditCourse({})} onEditCourse={c => setEditCourse({ course: c })} />
+        </div>
+      )}
+
+      {/* ── Inspector (docked panel / drawer) or focus view (Index's detail pane) ── */}
+      {combo && course && inspOpen && (
+        <>
+          {!docked && <div className="sh-insp-scrim" onClick={closeInsp} />}
+          <aside className={`ix-root sh-insp ${isWorkspace ? 'sh-insp--focus' : docked ? 'sh-insp--dock' : 'sh-insp--drawer'}`}
+            style={ixAccent} aria-label="Formula detail" role={docked ? undefined : 'dialog'}>
+            <div className="sh-insp-tools">
+              {inspIdx >= 0 && <span className="sh-insp-pos">{inspIdx + 1} / {items.length}</span>}
+              {isWorkspace && inspSel?.kind === 'card' && (() => {
+                const card = items[inspIdx]?.kind === 'card' ? (items[inspIdx] as { card: Card }).card : null
+                return card && (
+                  <button type="button" className={`sh-insp-pin${pinnedIds.has(card.id) ? ' is-on' : ''}`}
+                    aria-pressed={pinnedIds.has(card.id)} onClick={() => togglePin(card)}>
+                    <IconPin size={14} />{pinnedIds.has(card.id) ? 'Pinned' : 'Pin'}
+                  </button>
+                )
+              })()}
+              <button type="button" className="sh-insp-close" aria-label="Close" title="Close (Esc)" onClick={closeInsp}>
+                <IconClose size={15} />
+              </button>
+            </div>
+            <DetailPane course={course} items={items} index={inspIdx} onSelect={selectItem}
+              onOverview={() => selectItem(null)}
+              onJumpSection={sec => { if (!docked) closeInsp(); jumpToSection(sec.id) }}
+              editMode={editing} onEditCard={(card, section) => setEditCard({ section, card })}
+              onEditCourse={c => setEditCourse({ course: c })} />
+          </aside>
+        </>
+      )}
+
+      {/* ── Command palette across all courses ── */}
+      {combo && paletteOpen && course && (
+        <div className="ix-root sh-ixportal" style={ixAccent}>
+          <Palette index={searchIndex} activeCourseId={course.id} activeCourseCode={course.code}
+            onPick={pickResult} onClose={() => setPaletteOpen(false)} />
+        </div>
+      )}
 
       {/* ── Editors (existing modals) ── */}
       {editCard && course && (
