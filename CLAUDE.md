@@ -67,6 +67,20 @@ On every load, `CoursesProvider` compares a djb2 hash of each course in `DEFAULT
 
 Both the `Sidebar` and the `BottomNav` drawer group courses by `term` with collapsible headers, sharing `src/lib/courseGroups.ts` (`groupCourses`, plus collapsed-state persistence in `localStorage` under `formula-ref:collapsed-groups`). Keep the two in sync when changing course navigation.
 
+### UI versions under evaluation (`src/layouts/`, `src/preview/`)
+
+A redesign is in progress. The current UI (above) is still the default; alternative layouts load with `?layout=<name>` (lazy-loaded in `App.tsx`):
+- `sheet` — dense multi-column "live formula sheet" (label-rail entries, dark section bands, sticky section strip, density toggle, print CSS)
+- `index` — search-first master–detail lookup (course column, formula list, detail pane, ⌘K palette across courses)
+- `inspector` / `workspace` — combinations of the two, implemented as variants of `SheetLayout` (`variant` prop) that import Index's `DetailPane`, `Palette` and `CourseColumn`; extra styles in `src/layouts/sheet/combo.css`. Workspace adds pinned "My sheet" (`localStorage` `formula-ref:pins`, see `sheet/pins.ts`)
+- `handbook` — docs-style layout, archived (user preferred Sheet and Index)
+
+`?preview` shows a gallery of all versions (`src/preview/Gallery.tsx`, list in `src/preview/versions.ts`); in dev, `PreviewDock` adds a tab on the left edge to switch versions. `npm run layouts` opens the gallery. Each layout's CSS is prefixed (`sh-`, `ix-`, `hb-`, `pv-`).
+
+### Theme
+
+`src/lib/theme.ts` holds a light/dark/system preference (`localStorage` `formula-ref:theme`) and writes the resolved theme to `<html data-theme>`; `index.html` sets it before first paint. Key dark styles off `:root[data-theme="dark"]`, never `prefers-color-scheme`. Use `useTheme()` / `toggleTheme()` for toggles.
+
 ### KaTeX
 
 `src/lib/katex.ts` exports `renderLatex(tex, display?)` — wraps `katex.renderToString` with `throwOnError: false`. All formula rendering goes through this helper.
