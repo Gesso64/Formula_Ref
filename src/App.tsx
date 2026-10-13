@@ -5,19 +5,27 @@ import { Sidebar } from '@/components/layout/Sidebar'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { CardGrid } from '@/components/cards/CardGrid'
 import { CardEditor } from '@/components/cards/CardEditor'
+import { PreviewDock } from '@/preview/PreviewDock'
 import '@/index.css'
 
-// Alternative layouts, selected with ?layout=handbook|sheet|index. Lazy-loaded so each
-// layout's stylesheet is only injected when that layout is in use.
+// Alternative layouts, selected with ?layout=<name> (see src/preview/versions.ts). Lazy-loaded
+// so each layout's stylesheet is only injected when that layout is in use.
 const LAYOUTS = {
   handbook: lazy(() => import('@/layouts/handbook/HandbookLayout')),
   sheet: lazy(() => import('@/layouts/sheet/SheetLayout')),
   index: lazy(() => import('@/layouts/index/IndexLayout')),
+  inspector: lazy(() => import('@/layouts/inspector/InspectorLayout')),
+  workspace: lazy(() => import('@/layouts/workspace/WorkspaceLayout')),
 }
 type LayoutName = keyof typeof LAYOUTS
 
+const Gallery = lazy(() => import('@/preview/Gallery'))
+
+const params = new URLSearchParams(window.location.search)
+const isGallery = params.has('preview')
+
 function selectedLayout(): LayoutName | null {
-  const name = new URLSearchParams(window.location.search).get('layout')
+  const name = params.get('layout')
   return name && name in LAYOUTS ? (name as LayoutName) : null
 }
 
@@ -64,10 +72,12 @@ function LayoutInner({ name }: { name: LayoutName }) {
 }
 
 export default function App() {
+  if (isGallery) return <Suspense fallback={null}><Gallery /></Suspense>
   const layout = selectedLayout()
   return (
     <CoursesProvider>
       {layout ? <LayoutInner name={layout} /> : <Inner />}
+      {import.meta.env.DEV && <PreviewDock current={layout} />}
     </CoursesProvider>
   )
 }

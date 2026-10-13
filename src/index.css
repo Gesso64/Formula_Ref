@@ -22,18 +22,17 @@ body {
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg:       #1a1a18;
-    --color-bg2:      #222220;
-    --color-bg3:      #2a2a27;
-    --color-surface:  #1f1f1d;
-    --color-border:   rgba(255,255,255,0.08);
-    --color-border2:  rgba(255,255,255,0.18);
-    --color-text:     #e8e6dc;
-    --color-text2:    #9c9a92;
-    --color-text3:    #6e6d67;
-  }
+/* Dark tokens follow <html data-theme>, set by index.html / src/lib/theme.ts */
+:root[data-theme="dark"] {
+  --color-bg:       #1a1a18;
+  --color-bg2:      #222220;
+  --color-bg3:      #2a2a27;
+  --color-surface:  #1f1f1d;
+  --color-border:   rgba(255,255,255,0.08);
+  --color-border2:  rgba(255,255,255,0.18);
+  --color-text:     #e8e6dc;
+  --color-text2:    #9c9a92;
+  --color-text3:    #6e6d67;
 }
 
 .katex-display { overflow-x: auto; overflow-y: hidden; padding: 2px 0; }
