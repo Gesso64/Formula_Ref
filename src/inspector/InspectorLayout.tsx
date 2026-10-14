@@ -5,12 +5,13 @@ import { useTheme } from '@/lib/theme'
 import { CardEditor } from '@/components/cards/CardEditor'
 import { SectionEditor } from '@/components/courses/SectionEditor'
 import { CourseEditor } from '@/components/courses/CourseEditor'
-import type { Card, Course, Section } from '@/types'
+import type { Card, Course, FormulaSheet, Section } from '@/types'
 import {
   type Density, type Mode, type FlowSection, type Page, type Heights,
   splitLabel, shortLabel, sortedCards, paginate, pagesKey, loadDensity, saveDensity,
 } from './model'
-import { buildIndex, flattenCourse, formatHash, parseHash, type SearchDoc, type Selection } from './paneModel'
+import { buildIndex, flattenCourse, formatHash, parseHash, prefetchPdf, sheetUrl, type SearchDoc, type Selection } from './paneModel'
+import { SheetViewer } from './SheetViewer'
 import { Entry } from './Entry'
 import { ExampleBlock } from './Examples'
 import { DetailPane } from './DetailPane'
@@ -18,7 +19,7 @@ import { Palette } from './Palette'
 import { Menu, MenuHeading, MenuSep } from './Menu'
 import {
   IconChevronDown, IconSearch, IconClose, IconMore, IconPencil, IconPlus, IconDownload, IconUpload,
-  IconPrint, IconFile, IconArrowUpRight, IconCheck, IconDensityCompact, IconDensityComfortable, IconMark, IconSettings,
+  IconPrint, IconFile, IconCheck, IconDensityCompact, IconDensityComfortable, IconMark, IconSettings,
   IconSun, IconMoon,
 } from './icons'
 import './sheet.css'
@@ -149,14 +150,17 @@ function measureHeights(root: HTMLElement, cache: Map<string, number>): Heights 
 
 interface VisibleSection { section: Section; num: number; cards: Card[]; wide: boolean }
 
-/** The course and (if it still exists) the entry a URL hash points at. */
-function readHash(courses: Course[]): { courseId: string; sel: Selection | null } | null {
+/** The course and (if they still exist) the entry or formula sheet a URL hash points at. */
+function readHash(courses: Course[]): { courseId: string; sel: Selection | null; sheet: FormulaSheet | null } | null {
   const parsed = parseHash(window.location.hash, courses)
   if (!parsed) return null
-  const { course, sel } = parsed
+  const { course, sel, sheet } = parsed
   const found = !!sel && flattenCourse(course).some(i => i.kind === sel.kind && i.id === sel.id)
-  return { courseId: course.id, sel: found ? sel : null }
+  return { courseId: course.id, sel: found ? sel : null, sheet }
 }
+
+/** A plain click opens the sheet in the site; modified clicks keep the link's own behaviour (new tab etc.). */
+const plainClick = (e: React.MouseEvent) => e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey
 const DOCK_BP = 1100   // the detail panel docks beside the sheet at or above this width
 
 /** The formula sheet (label-rail entries in balanced columns) with a detail panel for the selected entry:
@@ -179,7 +183,11 @@ export default function InspectorLayout() {
   const [editCourse, setEditCourse] = useState<{ course?: Course } | null>(null)
   // A deep link (#aer309/<cardId>) wins over the persisted active course on first render.
   const [linked] = useState(() => readHash(courses))
-  const [insp, setInsp] = useState<{ courseId: string; sel: Selection | null } | null>(linked?.sel ? linked : null)
+  const [insp, setInsp] = useState<{ courseId: string; sel: Selection | null } | null>(
+    linked?.sel ? { courseId: linked.courseId, sel: linked.sel } : null)
+  // The formula sheet PDF being viewed (SheetViewer), if any.
+  const [sheetOpen, setSheetOpen] = useState<{ courseId: string; sheet: FormulaSheet } | null>(
+    linked?.sheet ? { courseId: linked.courseId, sheet: linked.sheet } : null)
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [headH, setHeadH] = useState(92)
 
@@ -407,6 +415,12 @@ export default function InspectorLayout() {
   const inspSel = inspOpen ? insp!.sel : null
   const inspIdx = inspSel ? items.findIndex(i => i.kind === inspSel.kind && i.id === inspSel.id) : -1
   const inspItem = inspIdx >= 0 ? items[inspIdx] : null
+  const viewing = sheetOpen && course && sheetOpen.courseId === course.id ? sheetOpen.sheet : null
+  const openSheet = useCallback((sheet: FormulaSheet) => {
+    if (!course) return
+    setInsp(null)
+    setSheetOpen({ courseId: course.id, sheet })
+  }, [course])
 
   /* Position among items of the same kind, so the formula count leaves out worked examples. */
   const inspPos = useMemo(() => {
@@ -417,11 +431,11 @@ export default function InspectorLayout() {
   }, [items, inspItem])
 
   /* Opening the panel pushes a history entry (see the URL sync below), so closing goes back to it. */
-  const closingInsp = useRef(false)
-  const closeInsp = useCallback(() => {
+  const closingOverlay = useRef(false)
+  const closeOverlay = useCallback(() => {
     if (window.history.state?.shInsp) {
-      if (!closingInsp.current) { closingInsp.current = true; window.history.back() }
-    } else setInsp(null)
+      if (!closingOverlay.current) { closingOverlay.current = true; window.history.back() }
+    } else { setInsp(null); setSheetOpen(null) }
   }, [])
 
   const openCard = useCallback((card: Card) => {
@@ -461,11 +475,12 @@ export default function InspectorLayout() {
 
   const pendingCourse = useRef<string | null>(linked?.courseId ?? null)   // held until that course is active
   const applyHash = useEffectEvent(() => {
-    closingInsp.current = false
+    closingOverlay.current = false
     const next = readHash(courses)
     if (!next) { setInsp(null); return }
     if (next.courseId !== course?.id) { pendingCourse.current = next.courseId; switchCourse(next.courseId) }
-    setInsp(next.sel ? next : null)
+    setInsp(next.sel ? { courseId: next.courseId, sel: next.sel } : null)
+    setSheetOpen(next.sheet ? { courseId: next.courseId, sheet: next.sheet } : null)
   })
   const enterLinkedCourse = useEffectEvent(() => {
     if (pendingCourse.current && pendingCourse.current !== course?.id) switchCourse(pendingCourse.current)
@@ -491,20 +506,22 @@ export default function InspectorLayout() {
       pendingCourse.current = null
     }
     const base = window.location.pathname + window.location.search
-    const hash = formatHash(course, inspSel)
+    const hash = formatHash(course, inspSel, viewing)
+    const overlay = !!inspSel || !!viewing
     if (window.location.hash === hash) return
-    if (inspSel && !window.history.state?.shInsp) {
+    if (overlay && !window.history.state?.shInsp) {
       window.history.replaceState(null, '', base + formatHash(course, null))
       window.history.pushState({ shInsp: true }, '', base + hash)
     } else {
-      window.history.replaceState(inspSel ? window.history.state : null, '', base + hash)
+      window.history.replaceState(overlay ? window.history.state : null, '', base + hash)
     }
-  }, [course, inspSel])
+  }, [course, inspSel, viewing])
 
   const searchIndex = useMemo(() => buildIndex(courses), [courses])
 
   const pickResult = (doc: SearchDoc) => {
     setPaletteOpen(false)
+    setSheetOpen(null)
     if (doc.course.id !== course?.id) switchCourse(doc.course.id)
     if (doc.kind === 'section' && doc.sectionId) {
       const id = doc.sectionId
@@ -526,13 +543,13 @@ export default function InspectorLayout() {
         const it = items[i]
         if (it) selectItem({ kind: it.kind, id: it.id })
       }
-      if (e.key === 'Escape') { e.preventDefault(); closeInsp() }
+      if (e.key === 'Escape') { e.preventDefault(); closeOverlay() }
       else if (e.key === 'j' || e.key === 'ArrowDown') step(1)
       else if (e.key === 'k' || e.key === 'ArrowUp') step(-1)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [inspOpen, paletteOpen, editorOpen, items, inspIdx, selectItem, closeInsp])
+  }, [inspOpen, paletteOpen, editorOpen, items, inspIdx, selectItem, closeOverlay])
 
   /* Keyboard: "/" opens the palette. */
   useEffect(() => {
@@ -618,11 +635,12 @@ export default function InspectorLayout() {
         <>
           {mobile && sheetLinks.length > 0 && (
             <>
-              <MenuHeading>Printable PDF sheets</MenuHeading>
+              <MenuHeading>Formula sheets</MenuHeading>
               {sheetLinks.map(s => (
                 <a key={s.file} role="menuitem" className="sh-menu-item" target="_blank" rel="noopener noreferrer"
-                  href={`${import.meta.env.BASE_URL}formula-sheets/${s.file}`} onClick={() => close()}>
-                  <IconFile size={14} /> {s.label} <IconArrowUpRight size={12} className="sh-menu-trail" />
+                  href={sheetUrl(s)} onPointerEnter={prefetchPdf}
+                  onClick={e => { close(); if (plainClick(e)) { e.preventDefault(); openSheet(s) } }}>
+                  <IconFile size={14} /> {s.label}
                 </a>
               ))}
               <MenuSep />
@@ -707,12 +725,14 @@ export default function InspectorLayout() {
           )}
           {courseMenu}
           {!mobile && sheetLinks.length > 0 && (
-            <nav className="sh-sheets" aria-label="Printable PDF sheets">
+            <nav className="sh-sheets" aria-label="Formula sheets">
               {sheetLinks.map(s => (
                 <a key={s.file} className="sh-sheet-link" target="_blank" rel="noopener noreferrer"
-                  href={`${import.meta.env.BASE_URL}formula-sheets/${s.file}`} title={`${s.label} (PDF)`}>
+                  href={sheetUrl(s)} title={`View the ${s.label.toLowerCase()} (PDF)`}
+                  onPointerEnter={prefetchPdf} onFocus={prefetchPdf}
+                  onClick={e => { if (plainClick(e)) { e.preventDefault(); openSheet(s) } }}>
                   <IconFile size={14} />{s.label.replace(/\s*Sheet$/i, '')}
-                  <span className="sh-visually-hidden"> sheet, PDF, opens in new tab</span>
+                  <span className="sh-visually-hidden"> sheet (PDF)</span>
                 </a>
               ))}
             </nav>
@@ -876,22 +896,29 @@ export default function InspectorLayout() {
       {/* ── Detail panel: docked, drawer or full screen ── */}
       {course && inspOpen && (
         <>
-          {!docked && <div className="sh-insp-scrim" onClick={closeInsp} />}
+          {!docked && <div className="sh-insp-scrim" onClick={closeOverlay} />}
           <aside className={`ix-root sh-insp ${docked ? 'sh-insp--dock' : 'sh-insp--drawer'}`}
             style={ixAccent} aria-label="Formula detail" role={docked ? undefined : 'dialog'}>
             <DetailPane course={course} items={items} index={inspIdx} onSelect={selectItem}
               position={inspPos?.text} positionLabel={inspPos?.label}
               headExtra={
-                <button type="button" className="sh-insp-close" aria-label="Close" title="Close (Esc)" onClick={closeInsp}>
+                <button type="button" className="sh-insp-close" aria-label="Close" title="Close (Esc)" onClick={closeOverlay}>
                   <IconClose size={15} />
                 </button>
               }
               onOverview={() => selectItem(null)}
-              onJumpSection={sec => { if (!docked) closeInsp(); jumpToSection(sec.id) }}
+              onJumpSection={sec => { if (!docked) closeOverlay(); jumpToSection(sec.id) }}
+              onOpenSheet={openSheet}
               editMode={editing} onEditCard={(card, section) => setEditCard({ section, card })}
               onEditCourse={c => setEditCourse({ course: c })} />
           </aside>
         </>
+      )}
+
+      {/* ── Formula sheet PDF, full screen ── */}
+      {course && viewing && (
+        <SheetViewer course={course} sheet={viewing} mobile={mobile} onClose={closeOverlay}
+          onSelect={s => setSheetOpen({ courseId: course.id, sheet: s })} />
       )}
 
       {/* ── Command palette across all courses ── */}

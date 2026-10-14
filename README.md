@@ -11,7 +11,7 @@ A mobile-friendly, editable formula reference sheet for TMU courses.
 - Each course is a dense, multi-column formula sheet with a sticky numbered section strip and compact / comfortable density; prints as a two-column sheet
 - Click an entry to open it in a detail panel (docked on wide screens, a drawer on tablets, full screen on phones); step with j/k or ↑/↓, close with Esc; every entry has its own link (`#aer309/<card-id>`)
 - ⌘K / Ctrl+K or `/` searches every course
-- Printable, condensed **Midterm** and **Final** formula-sheet PDFs for every Year 2 course, linked from the top bar
+- Printable, condensed **Midterm** and **Final** formula-sheet PDFs for every Year 2 course: open them full screen in the site (zoom, switch between Midterm and Final, linkable as `#aer309/sheet/midterm`) or download them
 - Worked examples for PCS125 and ECN801
 - Add/edit/delete courses, sections, and cards (Edit mode), with live LaTeX preview
 - IndexedDB persistence (survives page reloads); export/import JSON backups

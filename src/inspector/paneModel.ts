@@ -1,4 +1,4 @@
-import type { Card, Course, Section, WorkedExample } from '@/types'
+import type { Card, Course, FormulaSheet, Section, WorkedExample } from '@/types'
 
 export const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)
 
@@ -28,13 +28,25 @@ export function flattenCourse(course: Course): ListItem[] {
   return out
 }
 
-/* ── URL hash: #<code>/<cardId> · #<code>/ex/<exampleId> · #<code> ─────── */
+/* ── Formula sheet PDFs ────────────────────────────────────────────────── */
+
+/** "Midterm Sheet" → "midterm": the sheet's name in the URL hash. */
+export function sheetKey(sheet: FormulaSheet): string {
+  return sheet.label.toLowerCase().replace(/\s*sheet\s*$/, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || sheet.file.replace(/\.pdf$/i, '')
+}
+
+/** Start fetching pdf.js (SheetViewer's renderer) early, e.g. when a sheet link is hovered. */
+export const prefetchPdf = () => { void import('./pdf') }
+
+export const sheetUrl = (sheet: FormulaSheet) => `${import.meta.env.BASE_URL}formula-sheets/${sheet.file}`
+
+/* ── URL hash: #<code>/<cardId> · #<code>/ex/<exampleId> · #<code>/sheet/<key> · #<code> ── */
 
 export function courseSlug(course: Course): string {
   return (course.code || course.id).toLowerCase().replace(/[^a-z0-9-]+/g, '-')
 }
 
-export interface HashState { course: Course; sel: Selection | null }
+export interface HashState { course: Course; sel: Selection | null; sheet: FormulaSheet | null }
 
 export function parseHash(hash: string, courses: Course[]): HashState | null {
   const raw = decodeURIComponent(hash.replace(/^#\/?/, ''))
@@ -42,13 +54,15 @@ export function parseHash(hash: string, courses: Course[]): HashState | null {
   const [slug, a, b] = raw.split('/')
   const course = courses.find(c => courseSlug(c) === slug.toLowerCase() || c.id === slug)
   if (!course) return null
-  if (a === 'ex' && b) return { course, sel: { kind: 'example', id: b } }
-  if (a) return { course, sel: { kind: 'card', id: a } }
-  return { course, sel: null }
+  if (a === 'sheet' && b) return { course, sel: null, sheet: course.sheets?.find(s => sheetKey(s) === b) ?? null }
+  if (a === 'ex' && b) return { course, sel: { kind: 'example', id: b }, sheet: null }
+  if (a) return { course, sel: { kind: 'card', id: a }, sheet: null }
+  return { course, sel: null, sheet: null }
 }
 
-export function formatHash(course: Course, sel: Selection | null): string {
+export function formatHash(course: Course, sel: Selection | null, sheet: FormulaSheet | null = null): string {
   const slug = courseSlug(course)
+  if (sheet) return `#${slug}/sheet/${sheetKey(sheet)}`
   if (!sel) return `#${slug}`
   return sel.kind === 'example' ? `#${slug}/ex/${encodeURIComponent(sel.id)}` : `#${slug}/${encodeURIComponent(sel.id)}`
 }

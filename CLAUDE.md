@@ -28,7 +28,7 @@ Course accent colours are stored per-course as six CSS-variable-like fields (`ac
 
 Other optional `Course` fields:
 - `term` — grouping label in the course menu (e.g. `'Year 2 · Fall 2026'`); courses without one fall under "My Courses"
-- `sheets` — `{ label, file }[]` of PDFs in `public/formula-sheets/`, linked from the top bar (and the ⋯ menu on phones). Every Year 2 course uses exactly `Midterm Sheet` + `Final Sheet`
+- `sheets` — `{ label, file }[]` of PDFs in `public/formula-sheets/`, linked from the top bar (and the ⋯ menu on phones); a plain click opens them in the in-site viewer (`SheetViewer`). Every Year 2 course uses exactly `Midterm Sheet` + `Final Sheet`
 - `examples` — `WorkedExample[]` shown in the "Worked Examples" view (PCS125, ECN801)
 
 ### Default course data (`src/data/`)
@@ -66,6 +66,7 @@ On every load, `CoursesProvider` compares a djb2 hash of each course in `DEFAULT
 - `InspectorLayout.tsx` — the page: top bar (course menu, PDF sheet links, Formulas / Worked Examples switch, search trigger, density, Edit, theme, ⋯ menu), sticky numbered section strip with scroll-spy, and the sheet body. Each "page" of the body is a balanced CSS multi-column block about one screen tall (`paginate` in `model.ts`); columns: up to 4 compact / 3 comfortable, one on phones (`< 768px`)
 - `Entry.tsx` — one label-rail entry (name + hint on the left, formulas + terse note on the right); `Examples.tsx` — worked examples; `Menu.tsx` — dropdown / phone bottom-sheet menus; `icons.tsx`
 - Detail panel: clicking an entry opens `DetailPane.tsx`, docked on the right at ≥ 1100px, an overlay drawer from 768–1100px, full screen on phones. j/k or ↑/↓ step through entries, Esc / Back closes. The course and selected entry live in the URL hash (`#<code>`, `#<code>/<cardId>`, `#<code>/ex/<exampleId>`, via `parseHash` / `formatHash` in `paneModel.ts`); opening the panel pushes a history entry so Back closes it. `DetailPane` shrinks over-wide equations to fit (down to half size, then they scroll)
+- `SheetViewer.tsx` — a course's Midterm / Final PDF full screen inside the site: Midterm/Final switch, zoom (−/Fit/+, keys `-` `=` `0`), page counter, open-in-new-tab and Download. Rendered with pdf.js (`pdfjs-dist` legacy build, for older mobile Safari) loaded on demand from `pdf.ts` (`loadSheet` caches documents); `prefetchPdf` warms it when a sheet link is hovered. URL hash `#<code>/sheet/<key>` (`sheetKey`: "Midterm Sheet" → `midterm`); it is an overlay like the detail panel, so Esc / Back closes it. Modified clicks on sheet links (Ctrl/⌘, middle) still open the raw PDF. Styles in `viewer.css` (prefix `sv-`)
 - `Palette.tsx` — ⌘K / Ctrl+K or `/` searches every course (`buildIndex` / `search` in `paneModel.ts`); `paneIcons.tsx`, `Tex.tsx`
 - CSS: `sheet.css` (prefix `sh-`, includes print styles), `pane.css` (prefix `ix-`, detail pane + palette), `inspector.css` (the panel's docked / drawer / phone placement). The `ix-` parts started life as a separate "Index" layout, hence the second prefix
 

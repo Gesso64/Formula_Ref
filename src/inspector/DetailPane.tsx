@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { InterestTable } from '@/components/cards/InterestTable'
-import type { Card, Course, Section, WorkedExample } from '@/types'
-import { cardEquations, isMac, sortedSections, splitSectionLabel, type ListItem, type Selection } from './paneModel'
+import type { Card, Course, FormulaSheet, Section, WorkedExample } from '@/types'
+import { cardEquations, isMac, sheetUrl, sortedSections, splitSectionLabel, type ListItem, type Selection } from './paneModel'
 import { Tex } from './Tex'
 import {
   ArrowLeft, ArrowRight, CheckIcon, ChevronDown, ChevronUp, CopyIcon, FileIcon, FunctionIcon, LinkIcon, PencilIcon,
@@ -17,6 +17,8 @@ interface Props {
   editMode: boolean
   onEditCard: (card: Card, section: Section) => void
   onEditCourse: (course: Course) => void
+  /** View a formula sheet PDF in the site (plain clicks; modified clicks follow the link). */
+  onOpenSheet?: (sheet: FormulaSheet) => void
   /** Shown between the previous / next buttons, e.g. "12 / 87". */
   position?: string
   positionLabel?: string
@@ -327,7 +329,7 @@ function ExampleDetail({ example, course, onSelect, copied, copy }: {
 
 /* ── Course overview (nothing selected) ────────────────────────────────── */
 
-function CourseOverview({ course, items, onSelect, onJumpSection, editMode, onEditCourse }: Props) {
+function CourseOverview({ course, items, onSelect, onJumpSection, editMode, onEditCourse, onOpenSheet }: Props) {
   const sections = sortedSections(course)
   const formulas = items.filter(i => i.kind === 'card').length
   const examples = course.examples ?? []
@@ -356,12 +358,15 @@ function CourseOverview({ course, items, onSelect, onJumpSection, editMode, onEd
       {course.sheets && course.sheets.length > 0 && (
         <div className="ix-sheets">
           {course.sheets.map(sheet => (
-            <a key={sheet.file} className="ix-sheet" href={`${import.meta.env.BASE_URL}formula-sheets/${sheet.file}`}
-              target="_blank" rel="noopener noreferrer">
+            <a key={sheet.file} className="ix-sheet" href={sheetUrl(sheet)} target="_blank" rel="noopener noreferrer"
+              onClick={e => {
+                if (!onOpenSheet || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return
+                e.preventDefault(); onOpenSheet(sheet)
+              }}>
               <FileIcon size={18} />
               <span className="ix-sheet-text">
                 <span className="ix-sheet-label">{sheet.label}</span>
-                <span className="ix-sheet-file">PDF · opens in new tab</span>
+                <span className="ix-sheet-file">PDF · view or download</span>
               </span>
               <ArrowRight size={14} className="ix-link-arrow" />
             </a>

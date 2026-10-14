@@ -19,6 +19,7 @@ export const IconMore = (p: P) => (
 )
 export const IconPencil = (p: P) => <Svg {...p}><path d="M10.5 3.5l2 2L6 12H4v-2l6.5-6.5z" /></Svg>
 export const IconPlus = (p: P) => <Svg {...p}><path d="M8 3.5v9M3.5 8h9" /></Svg>
+export const IconMinus = (p: P) => <Svg {...p}><path d="M3.5 8h9" /></Svg>
 export const IconDownload = (p: P) => <Svg {...p}><path d="M8 2.5v8M4.75 7.25L8 10.5l3.25-3.25M3 13.5h10" /></Svg>
 export const IconUpload = (p: P) => <Svg {...p}><path d="M8 10.5v-8M4.75 5.75L8 2.5l3.25 3.25M3 13.5h10" /></Svg>
 export const IconPrint = (p: P) => <Svg {...p}><path d="M4.5 6V2.5h7V6M4.5 11.5h-2v-5h11v5h-2" /><path d="M4.5 9.5h7v4h-7z" /></Svg>

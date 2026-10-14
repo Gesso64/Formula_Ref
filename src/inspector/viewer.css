@@ -1,0 +1,58 @@
+/* ════════════════════════════════════════════════════════════════════════
+   Formula sheet viewer (SheetViewer): a course's Midterm / Final PDF shown
+   full screen inside the site. Uses the sheet's sh- tokens (it renders
+   inside .sh-root).
+   ════════════════════════════════════════════════════════════════════════ */
+
+.sv-root {
+  --sv-bg: #e4e5e8;
+  position: fixed; inset: 0; z-index: 85;
+  display: flex; flex-direction: column;
+  background: var(--sv-bg); color: var(--sh-ink);
+}
+:root[data-theme="dark"] .sv-root { --sv-bg: #0c0d10; }
+
+.sv-bar {
+  flex: 0 0 auto; display: flex; align-items: center; gap: 8px;
+  height: 52px; padding: 0 12px;
+  background: var(--sh-paper); border-bottom: 1px solid var(--sh-rule2);
+}
+.sv-title { display: flex; align-items: baseline; gap: 8px; min-width: 0; white-space: nowrap; margin-right: 6px; }
+.sv-code { font-family: 'IBM Plex Sans Condensed', 'IBM Plex Sans', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: .01em; }
+.sv-name { color: var(--sh-ink3); font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; }
+.sv-spacer { flex: 1; }
+.sv-pageno { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--sh-ink3); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+.sv-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex: 0 0 auto;
+  height: 34px; min-width: 34px; padding: 0 8px;
+  border: 0; border-radius: 7px; background: none; color: var(--sh-ink2);
+  font: inherit; font-size: 13.5px; font-weight: 500; text-decoration: none; cursor: pointer;
+}
+.sv-btn:hover:not(:disabled) { background: var(--sh-hover); color: var(--sh-ink); }
+.sv-btn:disabled { opacity: .35; cursor: default; }
+.sv-btn--solid { background: var(--sh-ink); color: var(--sh-paper); padding: 0 12px; }
+.sv-btn--solid:hover:not(:disabled) { background: var(--sh-ink2); color: var(--sh-paper); }
+
+.sv-zoom { display: flex; align-items: center; gap: 2px; }
+.sv-zoom-val {
+  min-width: 52px; height: 30px; border: 0; border-radius: 6px; background: none; cursor: pointer;
+  font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--sh-ink2); font-variant-numeric: tabular-nums;
+}
+.sv-zoom-val:hover { background: var(--sh-hover); color: var(--sh-ink); }
+
+.sv-scroll { flex: 1; min-height: 0; overflow: auto; overscroll-behavior: contain; padding: 20px 24px 48px; }
+.sv-pages { margin: 0 auto; display: flex; flex-direction: column; align-items: center; gap: 16px; }
+.sv-page { flex: 0 0 auto; background: #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, .14), 0 10px 28px rgba(0, 0, 0, .12); }
+.sv-page canvas { display: block; width: 100%; height: 100%; }
+.sv-msg { max-width: 420px; margin: 18vh auto 0; text-align: center; color: var(--sh-ink2); font-size: 14.5px; line-height: 1.6; }
+.sv-msg a { color: var(--sh-ink); }
+
+.sh-is-mobile .sv-bar { padding: 0 6px; gap: 4px; }
+.sh-is-mobile .sv-btn { height: 40px; min-width: 40px; }
+.sh-is-mobile .sv-btn--solid { padding: 0; }
+.sh-is-mobile .sv-seg button { height: 30px; padding: 0 10px; }
+.sh-is-mobile .sv-scroll { padding: 12px 12px 32px; }
+.sh-is-mobile .sv-pages { gap: 10px; }
+
+@media print { .sv-root { display: none !important; } }
