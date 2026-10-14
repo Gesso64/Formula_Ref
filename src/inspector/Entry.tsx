@@ -3,7 +3,7 @@ import { renderLatex } from '@/lib/katex'
 import { InterestTable } from '@/components/cards/InterestTable'
 import type { Card } from '@/types'
 import { tagHint } from './model'
-import { IconPencil, IconPin } from './icons'
+import { IconPencil } from './icons'
 
 interface EntryProps {
   card: Card
@@ -11,12 +11,9 @@ interface EntryProps {
   onEdit: (card: Card) => void
   exampleNumbers: Map<string, number>
   onExample: (id: string) => void
-  /** Combined layouts: open the entry in the inspector / focus view. */
+  /** Open the entry in the detail panel. */
   onOpen?: (card: Card) => void
   selected?: boolean
-  /** Workspace layout: pin toggle for “My sheet”. */
-  pinned?: boolean
-  onPin?: (card: Card) => void
   /** Measured height, used as the off-screen placeholder size (content-visibility: auto). */
   estH?: number
   /** Cached fitted font size per formula (in DOM order), so the entry renders already fitted. */
@@ -27,7 +24,7 @@ interface EntryProps {
 const fitStyle = (size?: string) => (size ? { fontSize: size } : undefined)
 
 /** One formula entry, set as a label-rail row: name + hint on the left, formulas + terse note on the right. */
-export const Entry = memo(function Entry({ card, editing, onEdit, exampleNumbers, onExample, onOpen, selected, pinned, onPin, estH, fit, fitKey }: EntryProps) {
+export const Entry = memo(function Entry({ card, editing, onEdit, exampleNumbers, onExample, onOpen, selected, estH, fit, fitKey }: EntryProps) {
   const formulaHtml = useMemo(
     () => (card.formula ? renderLatex(card.formula, card.formulaDisplay) : ''),
     [card.formula, card.formulaDisplay],
@@ -64,14 +61,6 @@ export const Entry = memo(function Entry({ card, editing, onEdit, exampleNumbers
               </button>
             ))}
           </div>
-        )}
-        {onPin && (
-          <button type="button" className={`sh-pin${pinned ? ' is-on' : ''}`} aria-pressed={!!pinned}
-            aria-label={pinned ? `Unpin “${card.title}” from My sheet` : `Pin “${card.title}” to My sheet`}
-            title={pinned ? 'Unpin from My sheet' : 'Pin to My sheet'}
-            onClick={e => { e.stopPropagation(); onPin(card) }}>
-            <IconPin size={13} />{pinned ? 'Pinned' : 'Pin'}
-          </button>
         )}
         {editing && (
           <button type="button" className="sh-iconbtn sh-entry-edit" aria-label={`Edit “${card.title}”`}

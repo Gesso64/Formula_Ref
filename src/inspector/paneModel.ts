@@ -1,5 +1,7 @@
 import type { Card, Course, Section, WorkedExample } from '@/types'
 
+export const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)
+
 /* ── Selection ─────────────────────────────────────────────────────────── */
 
 export type ItemKind = 'card' | 'example'
@@ -8,8 +10,6 @@ export interface Selection { kind: ItemKind; id: string }
 export type ListItem =
   | { kind: 'card'; id: string; card: Card; section: Section }
   | { kind: 'example'; id: string; example: WorkedExample }
-
-export function rowId(sel: Selection) { return `ix-row-${sel.kind}-${sel.id}` }
 
 export function sortedSections(course: Course): Section[] {
   return [...(course.sections ?? [])].sort((a, b) => a.order - b.order)

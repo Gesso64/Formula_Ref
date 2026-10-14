@@ -74,7 +74,7 @@ export function CourseEditor({ course, onClose }: Props) {
           <input style={inp} value={desc} onChange={e => setDesc(e.target.value)} placeholder="Textbook, chapters, semester…" />
         </label>
 
-        <label style={lbl}>Sidebar group (optional)
+        <label style={lbl}>Term group in the course menu (optional)
           <input style={inp} value={term} onChange={e => setTerm(e.target.value)} placeholder="e.g. Year 2 · Fall 2026" />
         </label>
 

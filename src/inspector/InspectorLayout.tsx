@@ -8,27 +8,22 @@ import { CourseEditor } from '@/components/courses/CourseEditor'
 import type { Card, Course, Section } from '@/types'
 import {
   type Density, type Mode, type FlowSection, type Page, type Heights,
-  splitLabel, shortLabel, sortedCards, cardHaystack, exampleHaystack, queryTerms, matches,
-  paginate, pagesKey, loadDensity, saveDensity,
+  splitLabel, shortLabel, sortedCards, paginate, pagesKey, loadDensity, saveDensity,
 } from './model'
+import { buildIndex, flattenCourse, formatHash, parseHash, type SearchDoc, type Selection } from './paneModel'
 import { Entry } from './Entry'
-import { loadPins, savePins, type Pin } from './pins'
-// The combined layouts (inspector, workspace) borrow Index's detail pane, palette and course rail.
-import { DetailPane } from '@/layouts/index/DetailPane'
-import { Palette } from '@/layouts/index/Palette'
-import { CourseColumn } from '@/layouts/index/CourseColumn'
-import { buildIndex, flattenCourse, formatHash, parseHash, type SearchDoc, type Selection } from '@/layouts/index/model'
-import { loadCollapsed, saveCollapsed } from '@/lib/courseGroups'
-import '@/layouts/index/IndexLayout.css'
-import './combo.css'
 import { ExampleBlock } from './Examples'
+import { DetailPane } from './DetailPane'
+import { Palette } from './Palette'
 import { Menu, MenuHeading, MenuSep } from './Menu'
 import {
   IconChevronDown, IconSearch, IconClose, IconMore, IconPencil, IconPlus, IconDownload, IconUpload,
   IconPrint, IconFile, IconArrowUpRight, IconCheck, IconDensityCompact, IconDensityComfortable, IconMark, IconSettings,
-  IconSun, IconMoon, IconPin,
+  IconSun, IconMoon,
 } from './icons'
 import './sheet.css'
+import './pane.css'
+import './inspector.css'
 
 const MOBILE_BP = 768
 const COL_GAP = 28
@@ -154,11 +149,6 @@ function measureHeights(root: HTMLElement, cache: Map<string, number>): Heights 
 
 interface VisibleSection { section: Section; num: number; cards: Card[]; wide: boolean }
 
-/** 'sheet' = the plain sheet; 'inspector' = sheet + docked detail panel; 'workspace' = course rail + focus view + My sheet. */
-export type SheetVariant = 'sheet' | 'inspector' | 'workspace'
-
-const EMPTY_NUMBERS = new Map<string, number>()
-
 /** The course and (if it still exists) the entry a URL hash points at. */
 function readHash(courses: Course[]): { courseId: string; sel: Selection | null } | null {
   const parsed = parseHash(window.location.hash, courses)
@@ -167,42 +157,34 @@ function readHash(courses: Course[]): { courseId: string; sel: Selection | null 
   const found = !!sel && flattenCourse(course).some(i => i.kind === sel.kind && i.id === sel.id)
   return { courseId: course.id, sel: found ? sel : null }
 }
-const DOCK_BP = 1100   // inspector docks beside the sheet at or above this width
-const RAIL_BP = 1024   // workspace shows the course rail at or above this width
+const DOCK_BP = 1100   // the detail panel docks beside the sheet at or above this width
 
-export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVariant }) {
+/** The formula sheet (label-rail entries in balanced columns) with a detail panel for the selected entry:
+ *  docked on the right on wide screens, a drawer on tablets, full screen on phones. */
+export default function InspectorLayout() {
   const { courses, activeCourse, setActiveCourseId, exportAll, importAll } = useCourses()
   const vp = useViewport()
   const mobile = vp.w < MOBILE_BP
   const { theme, toggle: toggleTheme } = useTheme()
-  const combo = variant !== 'sheet'
-  const isWorkspace = variant === 'workspace'
-  const docked = variant === 'inspector' && vp.w >= DOCK_BP
-  const railed = isWorkspace && vp.w >= RAIL_BP
+  const docked = vp.w >= DOCK_BP
 
   const [density, setDensity] = useState<Density>(loadDensity)
   const [editing, setEditing] = useState(false)
-  const [query, setQuery] = useState('')
   const [mode, setMode] = useState<Mode>('formulas')
   const [jump, setJump] = useState<string | null>(null)
   const [flash, setFlash] = useState<string | null>(null)
-  const [searchOpen, setSearchOpen] = useState(false)
   const [inView, setInView] = useState<string[]>([])
   const [editCard, setEditCard] = useState<{ section: Section; card?: Card } | null>(null)
   const [editSection, setEditSection] = useState<{ section?: Section; order: number } | null>(null)
   const [editCourse, setEditCourse] = useState<{ course?: Course } | null>(null)
   // A deep link (#aer309/<cardId>) wins over the persisted active course on first render.
-  const [linked] = useState(() => (combo ? readHash(courses) : null))
+  const [linked] = useState(() => readHash(courses))
   const [insp, setInsp] = useState<{ courseId: string; sel: Selection | null } | null>(linked?.sel ? linked : null)
   const [paletteOpen, setPaletteOpen] = useState(false)
-  const [pins, setPins] = useState<Pin[]>(loadPins)
-  const [mySheet, setMySheet] = useState(false)
-  const [collapsed, setCollapsed] = useState<Set<string>>(loadCollapsed)
   const [headH, setHeadH] = useState(92)
 
   const headRef = useRef<HTMLDivElement>(null)
   const stripRef = useRef<HTMLDivElement>(null)
-  const searchRef = useRef<HTMLInputElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const savedScroll = useRef<Record<Mode, number>>({ formulas: 0, examples: 0 })
   const flashTimer = useRef(0)
@@ -225,33 +207,15 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
   const editorOpen = !!(editCard || editSection || editCourse)
   const hasExamples = (course?.examples?.length ?? 0) > 0
   const effMode: Mode = hasExamples ? mode : 'formulas'
-  const terms = useMemo(() => queryTerms(query), [query])
-  const termsKey = terms.join(' ')
-
-  /* Search haystacks for every course (cheap; recomputed only when data changes). */
-  const hay = useMemo(() => {
-    const m = new Map<string, string>()
-    for (const c of courses) for (const s of c.sections) for (const card of s.cards) m.set(card.id, cardHaystack(card, s.label))
-    return m
-  }, [courses])
-
   const sections = useMemo(() => (course ? [...course.sections].sort((a, b) => a.order - b.order) : []), [course])
 
-  const visible: VisibleSection[] = useMemo(() => {
-    const t = termsKey ? termsKey.split(' ') : []
-    return sections.map((section, i) => {
-      const all = sortedCards(section)
-      const cards = t.length ? all.filter(c => matches(hay.get(c.id) ?? '', t)) : all
-      return { section, num: i + 1, cards, wide: all.some(c => c.type === 'widget') }
-    })
-  }, [sections, hay, termsKey])
+  const visible: VisibleSection[] = useMemo(() => sections.map((section, i) => {
+    const cards = sortedCards(section)
+    return { section, num: i + 1, cards, wide: cards.some(c => c.type === 'widget') }
+  }), [sections])
 
-  const shown = useMemo(
-    () => visible.filter(v => v.cards.length > 0 || (editing && !termsKey)),
-    [visible, editing, termsKey],
-  )
+  const shown = useMemo(() => visible.filter(v => v.cards.length > 0 || editing), [visible, editing])
   const byId = useMemo(() => new Map(shown.map(v => [v.section.id, v])), [shown])
-  const matchCount = shown.reduce((n, v) => n + v.cards.length, 0)
   const totalCount = visible.reduce((n, v) => n + v.section.cards.length, 0)
 
   const flow: FlowSection[] = useMemo(
@@ -259,24 +223,9 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
     [shown],
   )
 
-  /* Matches in other courses (search is global, shown as a jump list). */
-  const elsewhere = useMemo(() => {
-    if (!termsKey || !course) return []
-    const t = termsKey.split(' ')
-    return courses.filter(c => c.id !== course.id).map(c => ({
-      course: c,
-      n: c.sections.reduce((n, s) => n + s.cards.filter(card => matches(hay.get(card.id) ?? '', t)).length, 0),
-    })).filter(x => x.n > 0)
-  }, [termsKey, courses, course, hay])
-
   /* Examples */
   const exampleNumbers = useMemo(() => new Map((course?.examples ?? []).map(e => [e.id, e.number])), [course])
-  const exHay = useMemo(() => new Map((course?.examples ?? []).map(e => [e.id, exampleHaystack(e)])), [course])
-  const shownExamples = useMemo(() => {
-    const t = termsKey ? termsKey.split(' ') : []
-    const all = [...(course?.examples ?? [])].sort((a, b) => a.number - b.number)
-    return t.length ? all.filter(e => matches(exHay.get(e.id) ?? '', t)) : all
-  }, [course, exHay, termsKey])
+  const examples = useMemo(() => [...(course?.examples ?? [])].sort((a, b) => a.number - b.number), [course])
 
   /* Column geometry: each "page" is a balanced multi-column block about one screen tall. */
   const minCol = density === 'compact' ? 360 : 470
@@ -299,7 +248,7 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
      Waits for the KaTeX fonts so nothing measured with fallback fonts gets cached, and runs a beat
      after the last change so a window being resized isn't re-measured on every frame. */
   useEffect(() => {
-    if (effMode !== 'formulas' || mySheet || !hc) return
+    if (effMode !== 'formulas' || !hc) return
     let cancelled = false
     let timer = 0
     const run = async () => {
@@ -314,7 +263,7 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
     if (!document.fonts || document.fonts.status === 'loaded') schedule()
     else document.fonts.ready.then(schedule)
     return () => { cancelled = true; window.clearTimeout(timer) }
-  }, [flow, cols, colH, sig, effMode, mySheet, sheetRef, hc, fc])
+  }, [flow, cols, colH, sig, effMode, sheetRef, hc, fc])
 
   /* Fit formulas lazily, as entries (or worked examples) come near the viewport. */
   useEffect(() => {
@@ -328,7 +277,7 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
     }, { rootMargin: '600px 0px' })
     root.querySelectorAll('[data-entry], [data-ex]').forEach(el => io.observe(el))
     return () => io.disconnect()
-  }, [sheetRef, fitKey, fc, pages, effMode, shownExamples, mySheet, editing])
+  }, [sheetRef, fitKey, fc, pages, effMode, examples, editing])
 
   /* Scroll-spy: which sections (or examples) are on screen. */
   useEffect(() => {
@@ -355,7 +304,7 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
       window.removeEventListener('resize', on)
       cancelAnimationFrame(raf)
     }
-  }, [effMode, pages, shownExamples])
+  }, [effMode, pages, examples])
 
   /* Keep the first in-view chip visible in the index strip. */
   useEffect(() => {
@@ -424,7 +373,6 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
   }, [effMode])
 
   const switchMode = (m: Mode) => {
-    if (mySheet) { setMySheet(false); setMode(m); window.scrollTo({ top: 0 }); return }
     if (m === effMode) return
     savedScroll.current[effMode] = window.scrollY
     pendingRestore.current = savedScroll.current[m]
@@ -433,14 +381,11 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
 
   const openExample = useCallback((id: string) => {
     savedScroll.current.formulas = window.scrollY
-    setQuery('')
     setMode('examples')
     setJump(id)
   }, [])
 
-  const switchCourse = (id: string, keepQuery = false) => {
-    if (!keepQuery) setQuery('')
-    setMySheet(false)
+  const switchCourse = (id: string) => {
     setMode('formulas')
     setInView([])
     savedScroll.current = { formulas: 0, examples: 0 }
@@ -455,9 +400,9 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
     if (section) setEditCard({ section, card })
   }, [course])
 
-  /* ── Combined layouts: inspector / focus view, palette, pins ─────────── */
+  /* ── Detail panel and palette ─────────────────────────────────────────── */
 
-  const items = useMemo(() => (combo && course ? flattenCourse(course) : []), [combo, course])
+  const items = useMemo(() => (course ? flattenCourse(course) : []), [course])
   const inspOpen = !!insp && !!course && insp.courseId === course.id
   const inspSel = inspOpen ? insp!.sel : null
   const inspIdx = inspSel ? items.findIndex(i => i.kind === inspSel.kind && i.id === inspSel.id) : -1
@@ -503,14 +448,14 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
     }
   }, [])
   useEffect(() => {
-    if (inspSel?.kind !== 'card' || mySheet || effMode !== 'formulas') { revealing.current = null; return }
+    if (inspSel?.kind !== 'card' || effMode !== 'formulas') { revealing.current = null; return }
     if (revealing.current?.id !== inspSel.id) revealing.current = { id: inspSel.id, follow: true }
     else if (!revealing.current.follow) return
     const el = document.querySelector(`.sh-root [data-card="${CSS.escape(inspSel.id)}"]`)
     if (!el) return
     const r = el.getBoundingClientRect()
     if (r.top < headH || r.bottom > window.innerHeight) scrollToEl(el)
-  }, [inspSel, mySheet, effMode, headH, scrollToEl, pages])
+  }, [inspSel, effMode, headH, scrollToEl, pages])
 
   /* ── URL hash ↔ course + selected entry: #<code> · #<code>/<cardId> · #<code>/ex/<exampleId> ── */
 
@@ -527,7 +472,6 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
   })
 
   useEffect(() => {
-    if (!combo) return
     const prev = window.history.scrollRestoration
     window.history.scrollRestoration = 'manual'   // going back closes the panel; it must not move the sheet
     enterLinkedCourse()
@@ -538,10 +482,10 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
       window.removeEventListener('popstate', applyHash)
       window.removeEventListener('hashchange', applyHash)
     }
-  }, [combo])
+  }, [])
 
   useEffect(() => {
-    if (!combo || !course) return
+    if (!course) return
     if (pendingCourse.current) {
       if (pendingCourse.current !== course.id) return
       pendingCourse.current = null
@@ -555,14 +499,13 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
     } else {
       window.history.replaceState(inspSel ? window.history.state : null, '', base + hash)
     }
-  }, [combo, course, inspSel])
+  }, [course, inspSel])
 
-  const searchIndex = useMemo(() => (combo ? buildIndex(courses) : []), [combo, courses])
+  const searchIndex = useMemo(() => buildIndex(courses), [courses])
 
   const pickResult = (doc: SearchDoc) => {
     setPaletteOpen(false)
     if (doc.course.id !== course?.id) switchCourse(doc.course.id)
-    else if (mySheet) setMySheet(false)
     if (doc.kind === 'section' && doc.sectionId) {
       const id = doc.sectionId
       window.setTimeout(() => jumpToSection(id), 120)
@@ -571,48 +514,8 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
     }
   }
 
-  const pinnedIds = useMemo(() => new Set(pins.map(p => p.cardId)), [pins])
-  const togglePin = useCallback((card: Card) => {
-    if (!course) return
-    setPins(prev => {
-      const next = prev.some(p => p.cardId === card.id)
-        ? prev.filter(p => p.cardId !== card.id)
-        : [...prev, { courseId: course.id, cardId: card.id }]
-      savePins(next)
-      return next
-    })
-  }, [course])
-  const unpin = useCallback((card: Card) => {
-    setPins(prev => { const next = prev.filter(p => p.cardId !== card.id); savePins(next); return next })
-  }, [])
-
-  /* Pinned entries resolved against current data, grouped by course then section. */
-  const pinnedGroups = useMemo(() => {
-    if (!isWorkspace) return []
-    const ids = new Set(pins.map(p => p.cardId))
-    const out: { course: Course; section: Section; cards: Card[] }[] = []
-    for (const c of courses) {
-      for (const sec of [...c.sections].sort((a, b) => a.order - b.order)) {
-        const cards = sortedCards(sec).filter(card => ids.has(card.id))
-        if (cards.length) out.push({ course: c, section: sec, cards })
-      }
-    }
-    return out
-  }, [isWorkspace, pins, courses])
-  const pinCount = pinnedGroups.reduce((n, g) => n + g.cards.length, 0)
-
-  const toggleGroup = (term: string) => {
-    setCollapsed(prev => {
-      const next = new Set(prev)
-      if (next.has(term)) next.delete(term); else next.add(term)
-      saveCollapsed(next)
-      return next
-    })
-  }
-
-  /* Keyboard for the combined layouts: ⌘K / Ctrl+K palette; Esc, j/k and arrows in the detail view. */
+  /* Keyboard: ⌘K / Ctrl+K palette; Esc, j/k and ↑/↓ in the detail panel. */
   useEffect(() => {
-    if (!combo) return
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setPaletteOpen(o => !o); return }
       if (!inspOpen || paletteOpen || editorOpen || e.metaKey || e.ctrlKey || e.altKey) return
@@ -624,27 +527,24 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
         if (it) selectItem({ kind: it.kind, id: it.id })
       }
       if (e.key === 'Escape') { e.preventDefault(); closeInsp() }
-      else if (e.key === 'j' || e.key === 'ArrowDown' || (isWorkspace && e.key === 'ArrowRight')) step(1)
-      else if (e.key === 'k' || e.key === 'ArrowUp' || (isWorkspace && e.key === 'ArrowLeft')) step(-1)
+      else if (e.key === 'j' || e.key === 'ArrowDown') step(1)
+      else if (e.key === 'k' || e.key === 'ArrowUp') step(-1)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [combo, inspOpen, paletteOpen, editorOpen, items, inspIdx, isWorkspace, selectItem, closeInsp])
+  }, [inspOpen, paletteOpen, editorOpen, items, inspIdx, selectItem, closeInsp])
 
-  /* Keyboard: "/" focuses search (opens the palette in the combined layouts). */
+  /* Keyboard: "/" opens the palette. */
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      const t = e.target as HTMLElement
       if (e.key !== '/' || e.metaKey || e.ctrlKey || e.altKey) return
-      if (t.closest('input, textarea, select, [contenteditable="true"]')) return
+      if ((e.target as HTMLElement).closest('input, textarea, select, [contenteditable="true"]')) return
       e.preventDefault()
-      if (combo) { setPaletteOpen(true); return }
-      if (mobile) setSearchOpen(true)
-      requestAnimationFrame(() => searchRef.current?.focus())
+      setPaletteOpen(true)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [mobile, combo])
+  }, [])
 
   const onImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]
@@ -667,7 +567,7 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
   } as CSSProperties : undefined
 
   const rootCls = ['sh-root', `sh-${density}`, mobile ? 'sh-is-mobile' : 'sh-is-desktop', editing ? 'sh-is-editing' : '',
-    `sh-v-${variant}`, docked && inspOpen ? 'sh-insp-docked' : '', railed ? 'sh-railed' : ''].join(' ')
+    docked && inspOpen ? 'sh-insp-docked' : ''].join(' ')
 
   const courseMenu = (
     <Menu label="Choose course" sheet={mobile} className="sh-coursemenu"
@@ -772,30 +672,6 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
     </Menu>
   )
 
-  const searchBox = (
-    <div className="sh-search">
-      <IconSearch size={15} className="sh-search-icon" />
-      <input ref={searchRef} type="search" value={query} spellCheck={false} autoComplete="off"
-        placeholder={effMode === 'examples' ? 'Search examples' : 'Search formulas, symbols…'}
-        aria-label={effMode === 'examples' ? 'Search worked examples' : 'Search formulas'}
-        onChange={e => { setQuery(e.target.value); window.scrollTo({ top: 0 }) }}
-        onKeyDown={e => {
-          if (e.key === 'Escape') {
-            if (query) setQuery('')
-            else { e.currentTarget.blur(); setSearchOpen(false) }
-          }
-        }} />
-      {query
-        ? <span className="sh-search-count" aria-live="polite">{effMode === 'examples' ? shownExamples.length : matchCount}</span>
-        : !mobile && <kbd className="sh-kbd" aria-hidden="true">/</kbd>}
-      {query && (
-        <button type="button" className="sh-search-clear" aria-label="Clear search" onClick={() => { setQuery(''); searchRef.current?.focus() }}>
-          <IconClose size={13} />
-        </button>
-      )}
-    </div>
-  )
-
   const paletteTrigger = mobile ? (
     <button type="button" className="sh-iconbtn" aria-label="Search all courses" onClick={() => setPaletteOpen(true)}>
       <IconSearch size={16} />
@@ -808,19 +684,12 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
     </button>
   )
 
-  const modeSwitch = (hasExamples || isWorkspace) && (
+  const modeSwitch = hasExamples && (
     <div className="sh-seg" role="group" aria-label="View">
-      <button type="button" aria-pressed={!mySheet && effMode === 'formulas'} onClick={() => switchMode('formulas')}>Formulas</button>
-      {hasExamples && (
-        <button type="button" aria-pressed={!mySheet && effMode === 'examples'} onClick={() => switchMode('examples')}>
-          {mobile || isWorkspace ? 'Examples' : 'Worked Examples'}
-        </button>
-      )}
-      {isWorkspace && (
-        <button type="button" aria-pressed={mySheet} onClick={() => { setMySheet(true); setInsp(null); window.scrollTo({ top: 0 }) }}>
-          My sheet{pinCount > 0 && <span className="sh-seg-count">{pinCount}</span>}
-        </button>
-      )}
+      <button type="button" aria-pressed={effMode === 'formulas'} onClick={() => switchMode('formulas')}>Formulas</button>
+      <button type="button" aria-pressed={effMode === 'examples'} onClick={() => switchMode('examples')}>
+        {mobile ? 'Examples' : 'Worked Examples'}
+      </button>
     </div>
   )
 
@@ -831,64 +700,49 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
       <div className="sh-head" ref={headRef}>
         {/* ── Top bar ── */}
         <header className="sh-bar">
-          {mobile && searchOpen ? (
-            <div className="sh-bar-search">
-              {searchBox}
-              <button type="button" className="sh-textbtn" onClick={() => { setSearchOpen(false); setQuery('') }}>Cancel</button>
-            </div>
-          ) : (
-            <>
-              {!mobile && !railed && (
-                <a className="sh-mark" href={`${import.meta.env.BASE_URL}?layout=${variant}`} aria-label="Formula Ref home">
-                  <IconMark size={18} /><span>Formula Ref</span>
-                </a>
-              )}
-              {!railed && courseMenu}
-              {!mobile && sheetLinks.length > 0 && (
-                <nav className="sh-sheets" aria-label="Printable PDF sheets">
-                  {sheetLinks.map(s => (
-                    <a key={s.file} className="sh-sheet-link" target="_blank" rel="noopener noreferrer"
-                      href={`${import.meta.env.BASE_URL}formula-sheets/${s.file}`} title={`${s.label} (PDF)`}>
-                      <IconFile size={14} />{s.label.replace(/\s*Sheet$/i, '')}
-                      <span className="sh-visually-hidden"> sheet, PDF, opens in new tab</span>
-                    </a>
-                  ))}
-                </nav>
-              )}
-              <div className="sh-bar-spacer" />
-              {modeSwitch}
-              {combo ? paletteTrigger : mobile ? (
-                <button type="button" className="sh-iconbtn" aria-label="Search" onClick={() => {
-                  setSearchOpen(true); requestAnimationFrame(() => searchRef.current?.focus())
-                }}>
-                  <IconSearch size={16} />
-                </button>
-              ) : searchBox}
-              {!mobile && (
-                <div className="sh-seg sh-seg--icons" role="group" aria-label="Density">
-                  <button type="button" aria-pressed={density === 'compact'} aria-label="Compact density" title="Compact"
-                    onClick={() => changeDensity('compact')}><IconDensityCompact size={15} /></button>
-                  <button type="button" aria-pressed={density === 'comfortable'} aria-label="Comfortable density" title="Comfortable"
-                    onClick={() => changeDensity('comfortable')}><IconDensityComfortable size={15} /></button>
-                </div>
-              )}
-              {!mobile && !railed && (
-                <button type="button" className={`sh-textbtn sh-editbtn${editing ? ' is-on' : ''}`} aria-pressed={editing}
-                  onClick={() => setEditing(e => !e)}>
-                  <IconPencil size={14} />{editing ? 'Done' : 'Edit'}
-                </button>
-              )}
-              {!railed && <button type="button" className="sh-iconbtn" onClick={toggleTheme}
-                aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'} title="Toggle light/dark theme">
-                {theme === 'dark' ? <IconSun size={16} /> : <IconMoon size={16} />}
-              </button>}
-              {overflowMenu}
-            </>
+          {!mobile && (
+            <a className="sh-mark" href={import.meta.env.BASE_URL} aria-label="Formula Ref home">
+              <IconMark size={18} /><span>Formula Ref</span>
+            </a>
           )}
+          {courseMenu}
+          {!mobile && sheetLinks.length > 0 && (
+            <nav className="sh-sheets" aria-label="Printable PDF sheets">
+              {sheetLinks.map(s => (
+                <a key={s.file} className="sh-sheet-link" target="_blank" rel="noopener noreferrer"
+                  href={`${import.meta.env.BASE_URL}formula-sheets/${s.file}`} title={`${s.label} (PDF)`}>
+                  <IconFile size={14} />{s.label.replace(/\s*Sheet$/i, '')}
+                  <span className="sh-visually-hidden"> sheet, PDF, opens in new tab</span>
+                </a>
+              ))}
+            </nav>
+          )}
+          <div className="sh-bar-spacer" />
+          {modeSwitch}
+          {paletteTrigger}
+          {!mobile && (
+            <div className="sh-seg sh-seg--icons" role="group" aria-label="Density">
+              <button type="button" aria-pressed={density === 'compact'} aria-label="Compact density" title="Compact"
+                onClick={() => changeDensity('compact')}><IconDensityCompact size={15} /></button>
+              <button type="button" aria-pressed={density === 'comfortable'} aria-label="Comfortable density" title="Comfortable"
+                onClick={() => changeDensity('comfortable')}><IconDensityComfortable size={15} /></button>
+            </div>
+          )}
+          {!mobile && (
+            <button type="button" className={`sh-textbtn sh-editbtn${editing ? ' is-on' : ''}`} aria-pressed={editing}
+              onClick={() => setEditing(e => !e)}>
+              <IconPencil size={14} />{editing ? 'Done' : 'Edit'}
+            </button>
+          )}
+          <button type="button" className="sh-iconbtn" onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'} title="Toggle light/dark theme">
+            {theme === 'dark' ? <IconSun size={16} /> : <IconMoon size={16} />}
+          </button>
+          {overflowMenu}
         </header>
 
         {/* ── Section index strip ── */}
-        {course && !mySheet && (
+        {course && (
           <nav className="sh-strip" aria-label={effMode === 'formulas' ? 'Sections' : 'Worked examples'}>
             <div className="sh-strip-inner" ref={stripRef}>
               {effMode === 'formulas'
@@ -900,11 +754,10 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
                         disabled={!on} title={v.section.label}
                         onClick={() => jumpToSection(v.section.id)}>
                         <span className="sh-chip-num">{v.num}</span>{shortLabel(v.section.label)}
-                        {termsKey && on && <span className="sh-chip-count">{v.cards.length}</span>}
                       </button>
                     )
                   })
-                : shownExamples.map(ex => (
+                : examples.map(ex => (
                     <button key={ex.id} type="button" data-chip={ex.id} title={ex.title}
                       className={`sh-chip sh-chip--q${inView.includes(ex.id) ? ' is-active' : ''}`}
                       onClick={() => jumpToExample(ex.id)}>
@@ -940,48 +793,6 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
               <IconPlus size={13} />New course
             </button>
           </div>
-        ) : mySheet ? (
-          <>
-            <div className="sh-titleblock">
-              <div className="sh-tb-row">
-                <h1 className="sh-tb-name sh-tb-name--solo">My sheet</h1>
-                <span className="sh-tb-kind">{pinCount} pinned {pinCount === 1 ? 'entry' : 'entries'}</span>
-                {pinCount > 0 && (
-                  <button type="button" className="sh-textbtn sh-mysheet-print" onClick={() => window.print()}>
-                    <IconPrint size={14} />Print
-                  </button>
-                )}
-              </div>
-              <div className="sh-tb-meta"><span>Formulas pinned from any course, kept in this browser.</span></div>
-            </div>
-            {pinCount === 0 ? (
-              <div className="sh-noresults">
-                <p>Nothing pinned yet. Use <strong>Pin</strong> on any entry to collect formulas from every course on one sheet.</p>
-              </div>
-            ) : (
-              <div className="sh-page" style={{ columnCount: cols }}>
-                {pinnedGroups.map(g => {
-                  const { title } = splitLabel(g.section.label)
-                  const entry = (c: Card) => (
-                    <Entry key={c.id} card={c} editing={false} onEdit={onEditCard} exampleNumbers={EMPTY_NUMBERS}
-                      onExample={openExample} pinned onPin={unpin} />
-                  )
-                  return (
-                    <section key={g.section.id} className="sh-sec" aria-label={`${g.course.code} ${title}`}>
-                      <div className="sh-keep">
-                        <header className="sh-band">
-                          <span className="sh-band-num sh-band-code">{g.course.code}</span>
-                          <h2 className="sh-band-title">{title}</h2>
-                        </header>
-                        {entry(g.cards[0])}
-                      </div>
-                      {g.cards.slice(1).map(entry)}
-                    </section>
-                  )
-                })}
-              </div>
-            )}
-          </>
         ) : (
           <>
             <div className="sh-titleblock">
@@ -1012,8 +823,7 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
                       const entry = (c: Card) => (
                         <Entry key={c.id} card={c} editing={editing} onEdit={onEditCard} estH={hc?.get(c.id)} fit={fc.get(c.id)} fitKey={fitKey}
                           exampleNumbers={exampleNumbers} onExample={openExample}
-                          onOpen={combo ? openCard : undefined} selected={inspSel?.kind === 'card' && inspSel.id === c.id}
-                          pinned={pinnedIds.has(c.id)} onPin={isWorkspace ? togglePin : undefined} />
+                          onOpen={openCard} selected={inspSel?.kind === 'card' && inspSel.id === c.id} />
                       )
                       return (
                         <section key={`${part.id}-${part.start}`} className="sh-sec" data-part="" data-sec={part.id}
@@ -1033,7 +843,7 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
                             {cards[0] && entry(cards[0])}
                           </div>
                           {cards.slice(1).map(entry)}
-                          {editing && part.end === v.cards.length && !termsKey && (
+                          {editing && part.end === v.cards.length && (
                             <button type="button" className="sh-add" onClick={() => setEditCard({ section: v.section })}>
                               <IconPlus size={13} />Add entry
                             </button>
@@ -1044,25 +854,7 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
                   </div>
                 ))}
 
-                {termsKey && matchCount === 0 && (
-                  <div className="sh-noresults">
-                    <p>No entries in {course.code} match “{query.trim()}”.</p>
-                    <button type="button" className="sh-textbtn" onClick={() => setQuery('')}>Clear search</button>
-                  </div>
-                )}
-
-                {elsewhere.length > 0 && (
-                  <div className="sh-also">
-                    <span className="sh-also-label">Also matches in</span>
-                    {elsewhere.map(x => (
-                      <button key={x.course.id} type="button" className="sh-also-item" onClick={() => switchCourse(x.course.id, true)}>
-                        <span className="sh-also-code">{x.course.code}</span>{x.n}
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {editing && !termsKey && (
+                {editing && (
                   <button type="button" className="sh-add sh-add--section" onClick={() => setEditSection({ order: sections.length })}>
                     <IconPlus size={13} />Add section
                   </button>
@@ -1070,13 +862,7 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
               </>
             ) : (
               <div className="sh-examples">
-                {shownExamples.map(ex => <ExampleBlock key={ex.id} ex={ex} flash={flash === ex.id} />)}
-                {shownExamples.length === 0 && (
-                  <div className="sh-noresults">
-                    <p>No worked examples match “{query.trim()}”.</p>
-                    <button type="button" className="sh-textbtn" onClick={() => setQuery('')}>Clear search</button>
-                  </div>
-                )}
+                {examples.map(ex => <ExampleBlock key={ex.id} ex={ex} flash={flash === ex.id} />)}
               </div>
             )}
 
@@ -1087,37 +873,18 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
         )}
       </main>
 
-      {/* ── Workspace course rail (Index's course column) ── */}
-      {railed && (
-        <div className="ix-root sh-rail" style={ixAccent}>
-          <CourseColumn courses={courses} activeCourseId={course?.id ?? null} onSelectCourse={id => switchCourse(id)}
-            collapsed={collapsed} onToggleGroup={toggleGroup} onOpenSearch={() => setPaletteOpen(true)}
-            editMode={editing} onToggleEdit={() => setEditing(e => !e)}
-            onExport={() => void exportAll()} onImport={() => fileRef.current?.click()}
-            onNewCourse={() => setEditCourse({})} onEditCourse={c => setEditCourse({ course: c })} />
-        </div>
-      )}
-
-      {/* ── Inspector (docked panel / drawer) or focus view (Index's detail pane) ── */}
-      {combo && course && inspOpen && (
+      {/* ── Detail panel: docked, drawer or full screen ── */}
+      {course && inspOpen && (
         <>
           {!docked && <div className="sh-insp-scrim" onClick={closeInsp} />}
-          <aside className={`ix-root sh-insp ${isWorkspace ? 'sh-insp--focus' : docked ? 'sh-insp--dock' : 'sh-insp--drawer'}`}
+          <aside className={`ix-root sh-insp ${docked ? 'sh-insp--dock' : 'sh-insp--drawer'}`}
             style={ixAccent} aria-label="Formula detail" role={docked ? undefined : 'dialog'}>
             <DetailPane course={course} items={items} index={inspIdx} onSelect={selectItem}
               position={inspPos?.text} positionLabel={inspPos?.label}
               headExtra={
-                <>
-                  {isWorkspace && inspItem?.kind === 'card' && (
-                    <button type="button" className={`sh-insp-pin${pinnedIds.has(inspItem.id) ? ' is-on' : ''}`}
-                      aria-pressed={pinnedIds.has(inspItem.id)} onClick={() => togglePin(inspItem.card)}>
-                      <IconPin size={14} />{pinnedIds.has(inspItem.id) ? 'Pinned' : 'Pin'}
-                    </button>
-                  )}
-                  <button type="button" className="sh-insp-close" aria-label="Close" title="Close (Esc)" onClick={closeInsp}>
-                    <IconClose size={15} />
-                  </button>
-                </>
+                <button type="button" className="sh-insp-close" aria-label="Close" title="Close (Esc)" onClick={closeInsp}>
+                  <IconClose size={15} />
+                </button>
               }
               onOverview={() => selectItem(null)}
               onJumpSection={sec => { if (!docked) closeInsp(); jumpToSection(sec.id) }}
@@ -1128,8 +895,8 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
       )}
 
       {/* ── Command palette across all courses ── */}
-      {combo && paletteOpen && course && (
-        <div className="ix-root sh-ixportal" style={ixAccent}>
+      {paletteOpen && course && (
+        <div className={`ix-root sh-ixportal${mobile ? ' ix-mobile' : ''}`} style={ixAccent}>
           <Palette index={searchIndex} activeCourseId={course.id} activeCourseCode={course.code}
             onPick={pickResult} onClose={() => setPaletteOpen(false)} />
         </div>

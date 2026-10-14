@@ -1,4 +1,4 @@
-import type { Card, Section, WorkedExample } from '@/types'
+import type { Card, Section } from '@/types'
 
 export type Density = 'compact' | 'comfortable'
 export type Mode = 'formulas' | 'examples'
@@ -33,47 +33,6 @@ export function tagHint(card: Card): string {
 }
 
 export const sortedCards = (s: Section) => [...s.cards].sort((a, b) => a.order - b.order)
-
-/* ── Search ─────────────────────────────────────────────────────────────── */
-
-const GREEK: Record<string, string> = {
-  α: 'alpha', β: 'beta', γ: 'gamma', δ: 'delta', ε: 'epsilon', ζ: 'zeta', η: 'eta', θ: 'theta',
-  κ: 'kappa', λ: 'lambda', μ: 'mu', ν: 'nu', ξ: 'xi', π: 'pi', ρ: 'rho', σ: 'sigma', τ: 'tau',
-  φ: 'phi', ϕ: 'phi', χ: 'chi', ψ: 'psi', ω: 'omega', Γ: 'gamma', Δ: 'delta', Θ: 'theta',
-  Λ: 'lambda', Π: 'pi', Σ: 'sigma', Φ: 'phi', Ψ: 'psi', Ω: 'omega',
-}
-
-const stripHtml = (s: string) => s.replace(/<[^>]*>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ')
-
-function withGreekNames(s: string): string {
-  const names: string[] = []
-  for (const ch of s) if (GREEK[ch]) names.push(GREEK[ch])
-  return names.length ? `${s} ${names.join(' ')}` : s
-}
-
-export function cardHaystack(card: Card, sectionLabel: string): string {
-  return withGreekNames([
-    card.title, card.tag, sectionLabel,
-    stripHtml(card.notes ?? ''),
-    card.formula ?? '',
-    ...(card.subs ?? []).map(s => s.latex),
-    ...(card.tableRows ?? []).map(r => `${r.symbol} ${r.value} ${r.quantity}`),
-  ].join(' ')).toLowerCase()
-}
-
-export function exampleHaystack(ex: WorkedExample): string {
-  return withGreekNames([
-    `q${ex.number}`, ex.title, ex.source, ...ex.topics, ...ex.given,
-    ...ex.steps.map(s => `${s.text ?? ''} ${s.latex ?? ''}`),
-    ex.answer, ex.interpretation ?? '',
-  ].join(' ')).toLowerCase()
-}
-
-export function queryTerms(q: string): string[] {
-  return q.trim().toLowerCase().split(/\s+/).filter(Boolean)
-}
-
-export const matches = (hay: string, terms: string[]) => terms.every(t => hay.includes(t))
 
 /* ── Pagination ─────────────────────────────────────────────────────────────
  * The body is set as a run of "pages": each page is a balanced CSS multi-column

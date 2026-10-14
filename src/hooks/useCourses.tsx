@@ -20,6 +20,8 @@ export function CoursesProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    // Ignore a superseded run (StrictMode runs this twice in dev); a late finish would reset state the UI already changed.
+    let cancelled = false
     async function init() {
       // Sync default courses only when their content has changed (hash mismatch).
       // The hash is computed from the course data in code and stored in IDB.
@@ -34,11 +36,13 @@ export function CoursesProvider({ children }: { children: React.ReactNode }) {
       }
       const synced = await storage.getCourses()
       const meta = await storage.getMeta()
+      if (cancelled) return
       setCourses(synced)
       setActiveCourseIdState(meta.activeCourseId ?? synced[0]?.id ?? null)
       setLoading(false)
     }
     init()
+    return () => { cancelled = true }
   }, [])
 
   const setActiveCourseId = useCallback(async (id: string) => {

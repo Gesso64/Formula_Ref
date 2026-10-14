@@ -27,9 +27,9 @@ The hierarchy is **Course → Section → Card**. A `Card` can be:
 Course accent colours are stored per-course as six CSS-variable-like fields (`accent`, `accentBg`, `accentFg`, and their dark-mode counterparts).
 
 Other optional `Course` fields:
-- `term` — grouping label for the sidebar / mobile drawer (e.g. `'Year 2 · Fall 2026'`); courses without one fall under "My Courses"
-- `sheets` — `{ label, file }[]` of PDFs in `public/formula-sheets/`, rendered as buttons under the course header in `CardGrid`. Every Year 2 course uses exactly `Midterm Sheet` + `Final Sheet`
-- `examples` — `WorkedExample[]` shown in the "Worked Examples" tab (PCS125, ECN801)
+- `term` — grouping label in the course menu (e.g. `'Year 2 · Fall 2026'`); courses without one fall under "My Courses"
+- `sheets` — `{ label, file }[]` of PDFs in `public/formula-sheets/`, linked from the top bar (and the ⋯ menu on phones). Every Year 2 course uses exactly `Midterm Sheet` + `Final Sheet`
+- `examples` — `WorkedExample[]` shown in the "Worked Examples" view (PCS125, ECN801)
 
 ### Default course data (`src/data/`)
 
@@ -60,24 +60,18 @@ On every load, `CoursesProvider` compares a djb2 hash of each course in `DEFAULT
 
 `@/` resolves to `src/` (configured in `vite.config.ts` and `tsconfig.app.json`).
 
-### Layout
+### UI (`src/inspector/`)
 
-- Desktop: `Sidebar` (left) + `CardGrid` (main area)
-- Mobile (`< 768px`): `CardGrid` full-width + `BottomNav` fixed at bottom, with a "Courses" drawer
+`App.tsx` renders `InspectorLayout` once `CoursesProvider` has loaded. Everything the UI needs lives in `src/inspector/` (the editors `CardEditor` / `SectionEditor` / `CourseEditor` and the `InterestTable` widget stay in `src/components/`):
+- `InspectorLayout.tsx` — the page: top bar (course menu, PDF sheet links, Formulas / Worked Examples switch, search trigger, density, Edit, theme, ⋯ menu), sticky numbered section strip with scroll-spy, and the sheet body. Each "page" of the body is a balanced CSS multi-column block about one screen tall (`paginate` in `model.ts`); columns: up to 4 compact / 3 comfortable, one on phones (`< 768px`)
+- `Entry.tsx` — one label-rail entry (name + hint on the left, formulas + terse note on the right); `Examples.tsx` — worked examples; `Menu.tsx` — dropdown / phone bottom-sheet menus; `icons.tsx`
+- Detail panel: clicking an entry opens `DetailPane.tsx`, docked on the right at ≥ 1100px, an overlay drawer from 768–1100px, full screen on phones. j/k or ↑/↓ step through entries, Esc / Back closes. The course and selected entry live in the URL hash (`#<code>`, `#<code>/<cardId>`, `#<code>/ex/<exampleId>`, via `parseHash` / `formatHash` in `paneModel.ts`); opening the panel pushes a history entry so Back closes it. `DetailPane` shrinks over-wide equations to fit (down to half size, then they scroll)
+- `Palette.tsx` — ⌘K / Ctrl+K or `/` searches every course (`buildIndex` / `search` in `paneModel.ts`); `paneIcons.tsx`, `Tex.tsx`
+- CSS: `sheet.css` (prefix `sh-`, includes print styles), `pane.css` (prefix `ix-`, detail pane + palette), `inspector.css` (the panel's docked / drawer / phone placement). The `ix-` parts started life as a separate "Index" layout, hence the second prefix
 
-Both the `Sidebar` and the `BottomNav` drawer group courses by `term` with collapsible headers, sharing `src/lib/courseGroups.ts` (`groupCourses`, plus collapsed-state persistence in `localStorage` under `formula-ref:collapsed-groups`). Keep the two in sync when changing course navigation.
+Performance: KaTeX layout dominates (a big course is ~13k DOM nodes; one full layout costs hundreds of ms), so avoid anything that forces layout of every entry. `.sh-entry` / `.sh-ex` use `content-visibility: auto` (off-screen entries skip layout). `InspectorLayout` measures entry heights for pagination in a hidden, layout-isolated `.sh-measure` box (cloned entries, time-sliced), caches heights and fitted formula sizes per column geometry (cleared when course data changes), and passes them to `Entry` (`estH` → `contain-intrinsic-size`, `fit` → pre-fitted font sizes). Formulas are otherwise fitted lazily via an IntersectionObserver. Phones (one column) skip height measuring. `renderLatex` memoises its output.
 
-### UI versions under evaluation (`src/layouts/`, `src/preview/`)
-
-A redesign is in progress. The current UI (above) is still the default; alternative layouts load with `?layout=<name>` (lazy-loaded in `App.tsx`):
-- `sheet` — dense multi-column "live formula sheet" (label-rail entries, dark section bands, sticky section strip, density toggle, print CSS)
-- `index` — search-first master–detail lookup (course column, formula list, detail pane, ⌘K palette across courses)
-- `inspector` / `workspace` — combinations of the two, implemented as variants of `SheetLayout` (`variant` prop) that import Index's `DetailPane`, `Palette` and `CourseColumn`; extra styles in `src/layouts/sheet/combo.css`. Workspace adds pinned "My sheet" (`localStorage` `formula-ref:pins`, see `sheet/pins.ts`). Both keep the course and selected entry in the URL hash (`#<code>`, `#<code>/<cardId>`, `#<code>/ex/<exampleId>`, via `parseHash`/`formatHash` in `index/model.ts`); opening the panel pushes a history entry so Back/Esc closes it. `DetailPane` shrinks over-wide equations to fit (down to half size, then they scroll)
-- `handbook` — docs-style layout, archived (user preferred Sheet and Index)
-
-Sheet performance: KaTeX layout dominates (a big course is ~13k DOM nodes; one full layout costs hundreds of ms), so avoid anything that forces layout of every entry. `.sh-entry` / `.sh-ex` use `content-visibility: auto` (off-screen entries skip layout). `SheetLayout` measures entry heights for pagination in a hidden, layout-isolated `.sh-measure` box (cloned entries, time-sliced), caches heights and fitted formula sizes per column geometry (cleared when course data changes), and passes them to `Entry` (`estH` → `contain-intrinsic-size`, `fit` → pre-fitted font sizes). Formulas are otherwise fitted lazily via an IntersectionObserver. Phones (one column) skip height measuring. `renderLatex` memoises its output.
-
-`?preview` shows a gallery of all versions (`src/preview/Gallery.tsx`, list in `src/preview/versions.ts`); in dev, `PreviewDock` adds a tab on the left edge to switch versions. `npm run layouts` opens the gallery. Each layout's CSS is prefixed (`sh-`, `ix-`, `hb-`, `pv-`).
+Course grouping by `term` comes from `groupCourses` in `src/lib/courseGroups.ts`.
 
 ### Theme
 

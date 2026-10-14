@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
-import { search, type ResultKind, type SearchDoc } from './model'
+import { search, type ResultKind, type SearchDoc } from './paneModel'
 import { Tex } from './Tex'
-import { BookIcon, CloseIcon, CourseIcon, EnterIcon, FunctionIcon, LayersIcon, SearchIcon } from './icons'
+import { BookIcon, CloseIcon, CourseIcon, EnterIcon, FunctionIcon, LayersIcon, SearchIcon } from './paneIcons'
 
 interface Props {
   index: SearchDoc[]

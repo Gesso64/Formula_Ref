@@ -1,12 +1,11 @@
 import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { InterestTable } from '@/components/cards/InterestTable'
 import type { Card, Course, Section, WorkedExample } from '@/types'
-import { cardEquations, sortedSections, splitSectionLabel, type ListItem, type Selection } from './model'
+import { cardEquations, isMac, sortedSections, splitSectionLabel, type ListItem, type Selection } from './paneModel'
 import { Tex } from './Tex'
-import { isMac } from './hooks'
 import {
   ArrowLeft, ArrowRight, CheckIcon, ChevronDown, ChevronUp, CopyIcon, FileIcon, FunctionIcon, LinkIcon, PencilIcon,
-} from './icons'
+} from './paneIcons'
 
 interface Props {
   course: Course
