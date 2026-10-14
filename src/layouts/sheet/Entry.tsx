@@ -17,10 +17,17 @@ interface EntryProps {
   /** Workspace layout: pin toggle for “My sheet”. */
   pinned?: boolean
   onPin?: (card: Card) => void
+  /** Measured height, used as the off-screen placeholder size (content-visibility: auto). */
+  estH?: number
+  /** Cached fitted font size per formula (in DOM order), so the entry renders already fitted. */
+  fit?: string[]
+  fitKey?: string
 }
 
+const fitStyle = (size?: string) => (size ? { fontSize: size } : undefined)
+
 /** One formula entry, set as a label-rail row: name + hint on the left, formulas + terse note on the right. */
-export const Entry = memo(function Entry({ card, editing, onEdit, exampleNumbers, onExample, onOpen, selected, pinned, onPin }: EntryProps) {
+export const Entry = memo(function Entry({ card, editing, onEdit, exampleNumbers, onExample, onOpen, selected, pinned, onPin, estH, fit, fitKey }: EntryProps) {
   const formulaHtml = useMemo(
     () => (card.formula ? renderLatex(card.formula, card.formulaDisplay) : ''),
     [card.formula, card.formulaDisplay],
@@ -40,7 +47,8 @@ export const Entry = memo(function Entry({ card, editing, onEdit, exampleNumbers
     onOpen && !editing ? 'sh-entry--open' : '', selected ? 'sh-entry--selected' : ''].join(' ')
 
   return (
-    <article className={cls} data-entry="" data-card={card.id}
+    <article className={cls} data-entry="" data-card={card.id} data-fit={fit ? fitKey : undefined}
+      style={estH ? { containIntrinsicSize: `auto ${estH}px` } : undefined}
       onClick={editing ? () => onEdit(card) : onOpen ? () => onOpen(card) : undefined}>
       <div className="sh-label">
         <h3 className="sh-name">{card.title}</h3>
@@ -92,11 +100,13 @@ export const Entry = memo(function Entry({ card, editing, onEdit, exampleNumbers
           </div>
         )}
 
-        {formulaHtml && <div className="sh-f sh-f--key" dangerouslySetInnerHTML={{ __html: formulaHtml }} />}
+        {formulaHtml && <div className="sh-f sh-f--key" style={fitStyle(fit?.[0])} dangerouslySetInnerHTML={{ __html: formulaHtml }} />}
 
         {subsHtml.length > 0 && (
           <div className="sh-subs">
-            {subsHtml.map((html, i) => <div key={i} className="sh-f" dangerouslySetInnerHTML={{ __html: html }} />)}
+            {subsHtml.map((html, i) => (
+              <div key={i} className="sh-f" style={fitStyle(fit?.[i + (formulaHtml ? 1 : 0)])} dangerouslySetInnerHTML={{ __html: html }} />
+            ))}
           </div>
         )}
 

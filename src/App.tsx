@@ -10,14 +10,15 @@ import '@/index.css'
 
 // Alternative layouts, selected with ?layout=<name> (see src/preview/versions.ts). Lazy-loaded
 // so each layout's stylesheet is only injected when that layout is in use.
-const LAYOUTS = {
-  handbook: lazy(() => import('@/layouts/handbook/HandbookLayout')),
-  sheet: lazy(() => import('@/layouts/sheet/SheetLayout')),
-  index: lazy(() => import('@/layouts/index/IndexLayout')),
-  inspector: lazy(() => import('@/layouts/inspector/InspectorLayout')),
-  workspace: lazy(() => import('@/layouts/workspace/WorkspaceLayout')),
+const IMPORTS = {
+  handbook: () => import('@/layouts/handbook/HandbookLayout'),
+  sheet: () => import('@/layouts/sheet/SheetLayout'),
+  index: () => import('@/layouts/index/IndexLayout'),
+  inspector: () => import('@/layouts/inspector/InspectorLayout'),
+  workspace: () => import('@/layouts/workspace/WorkspaceLayout'),
 }
-type LayoutName = keyof typeof LAYOUTS
+type LayoutName = keyof typeof IMPORTS
+const LAYOUTS = Object.fromEntries(Object.entries(IMPORTS).map(([k, load]) => [k, lazy(load)])) as Record<LayoutName, ReturnType<typeof lazy>>
 
 const Gallery = lazy(() => import('@/preview/Gallery'))
 
@@ -28,6 +29,10 @@ function selectedLayout(): LayoutName | null {
   const name = params.get('layout')
   return name && name in LAYOUTS ? (name as LayoutName) : null
 }
+
+// Start fetching the selected layout's chunk now, in parallel with loading the courses from IndexedDB.
+const initialLayout = selectedLayout()
+if (initialLayout && !isGallery) void IMPORTS[initialLayout]()
 
 function useIsMobile() {
   const [mobile, setMobile] = useState(window.innerWidth < 768)

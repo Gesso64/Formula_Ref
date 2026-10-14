@@ -363,7 +363,12 @@ body.sh-bodybg { background: #fbfbf9; }
   padding: var(--sh-entry-py) 0 calc(var(--sh-entry-py) + 1px);
   border-bottom: 1px solid var(--sh-rule);
   break-inside: avoid;
+  /* Skip layout of off-screen entries (KaTeX is costly); SheetLayout sets measured sizes inline. */
+  content-visibility: auto; contain-intrinsic-size: auto 110px;
 }
+/* Hidden box SheetLayout measures cloned entries in (layout-isolated from the columns). */
+.sh-measure { position: absolute; left: 0; top: 0; height: 0; overflow: hidden; visibility: hidden; pointer-events: none; contain: strict; }
+.sh-measure .sh-entry { content-visibility: visible; }
 .sh-label { min-width: 0; padding-top: 3px; }
 .sh-name {
   margin: 0; font-family: 'IBM Plex Sans Condensed', 'IBM Plex Sans', sans-serif;
@@ -459,7 +464,7 @@ body.sh-bodybg { background: #fbfbf9; }
 /* ── Worked examples ─────────────────────────────────────────────────── */
 
 .sh-examples { max-width: 1480px; }
-.sh-ex { break-inside: avoid; scroll-margin-top: 110px; }
+.sh-ex { break-inside: avoid; scroll-margin-top: 110px; content-visibility: auto; contain-intrinsic-size: auto 640px; }
 .sh-ex + .sh-ex { margin-top: 22px; }
 .sh-band--ex .sh-band-num { color: var(--sh-band-ink); font-weight: 600; min-width: 2.2em; }
 .sh-band--ex .sh-band-ref { white-space: normal; text-align: right; }
@@ -572,6 +577,7 @@ body.sh-bodybg { background: #fbfbf9; }
   .sh-band { min-height: 0; padding: 2px 7px; }
   .sh-band-title { font-size: 10.5pt; }
   .sh-ex { break-inside: avoid; }
+  .sh-entry, .sh-ex { content-visibility: visible; }
   .sh-colophon { margin-top: 10px; }
   .sh-is-editing .sh-entry:hover { background: none; box-shadow: none; }
 }

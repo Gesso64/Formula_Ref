@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect, useEffectEvent, useLayoutEffect, useCallback, type CSSProperties } from 'react'
+import { useState, useMemo, useRef, useEffect, useEffectEvent, useCallback, type CSSProperties } from 'react'
 import { useCourses } from '@/hooks/courseModel'
 import { groupCourses } from '@/lib/courseGroups'
 import { useTheme } from '@/lib/theme'
@@ -67,18 +67,73 @@ function useElementWidth<T extends HTMLElement>() {
 const prefersReducedMotion = () => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
 
 /** Typesetter's fit: shrink an overflowing formula (down to 80%) so it sits on the line;
- *  anything still wider scrolls inside its own box. */
-function fitFormulas(root: HTMLElement) {
-  const els = [...root.querySelectorAll<HTMLElement>('.sh-f')]
+ *  anything still wider scrolls inside its own box. `root` is one entry / example, or a list of them. */
+function fitFormulas(roots: HTMLElement[], cache?: Map<string, string[]>) {
+  const els = roots.flatMap(r => [...r.querySelectorAll<HTMLElement>('.sh-f')])
   els.forEach(el => { el.style.fontSize = '' })
   const ratios = els.map(el => (el.scrollWidth > el.clientWidth + 1 ? el.clientWidth / el.scrollWidth : 1))
   els.forEach((el, i) => {
     const r = ratios[i]
     if (r < 1) el.style.fontSize = `calc(var(--sh-fs-f) * ${Math.max(0.8, Math.floor(r * 100) / 100 - 0.01)})`
   })
+  // Remember each entry's sizes so it renders already fitted next time (see Entry's `fit`).
+  if (cache) for (const r of roots) {
+    if (r.dataset.card) cache.set(r.dataset.card, [...r.querySelectorAll<HTMLElement>('.sh-f')].map(el => el.style.fontSize))
+  }
 }
 
-function measureHeights(root: HTMLElement): Heights {
+/* Entries use content-visibility: auto, so the browser only lays out the ones near the viewport —
+   KaTeX layout is the expensive part of this page. Measuring an entry forces its layout, so heights
+   are cached per column geometry (an entry's height depends only on the column width, density and
+   edit mode); a course or a width is measured once, and the cached heights double as each entry's
+   contain-intrinsic-size so off-screen entries keep their real size. */
+const HEIGHT_CACHES = new Map<string, Map<string, number>>()
+const FIT_CACHES = new Map<string, Map<string, string[]>>()   // fitted .sh-f font sizes per entry
+let cachedFor: unknown = null   // the courses array the caches were measured from
+function sheetCache<T>(store: Map<string, Map<string, T>>, key: string, courses: Course[]) {
+  if (cachedFor !== courses) { HEIGHT_CACHES.clear(); FIT_CACHES.clear(); cachedFor = courses }   // any edit re-measures
+  let c = store.get(key)
+  if (!c) {
+    c = new Map()
+    store.set(key, c)
+    if (store.size > 8) store.delete(store.keys().next().value!)
+  }
+  return c
+}
+
+/** Measure every entry missing from the cache. Each is cloned into a hidden, layout-isolated box at the
+ *  column width and fitted there, so measuring never re-balances the visible columns; the work is split
+ *  into short slices so a first visit doesn't block the page. Resolves false if cancelled. */
+async function measureEntries(root: HTMLElement, cache: Map<string, number>, fits: Map<string, string[]>, cancelled: () => boolean) {
+  const missing = [...root.querySelectorAll<HTMLElement>('.sh-page:not(.sh-page--wide) [data-entry]')]
+    .filter(el => !cache.has(el.dataset.card!))
+  if (!missing.length) return !cancelled()
+  const box = document.createElement('div')
+  box.className = 'sh-measure'
+  box.style.width = `${missing[0].getBoundingClientRect().width}px`
+  root.appendChild(box)
+  try {
+    for (let i = 0; i < missing.length;) {
+      if (cancelled()) return false
+      const t0 = performance.now()
+      do {
+        const src = missing[i++]
+        const clone = src.cloneNode(true) as HTMLElement
+        clone.removeAttribute('style')
+        box.appendChild(clone)
+        fitFormulas([clone], fits)
+        cache.set(src.dataset.card!, clone.offsetHeight)
+        clone.remove()
+      } while (i < missing.length && performance.now() - t0 < 24)
+      await new Promise(r => setTimeout(r, 0))
+    }
+  } finally {
+    box.remove()
+  }
+  return !cancelled()
+}
+
+function measureHeights(root: HTMLElement, cache: Map<string, number>): Heights {
   const map: Heights = new Map()
   root.querySelectorAll<HTMLElement>('[data-part]').forEach(part => {
     const id = part.dataset.sec!
@@ -88,7 +143,7 @@ function measureHeights(root: HTMLElement): Heights {
     const band = part.querySelector<HTMLElement>('.sh-band')
     if (band) rec.band = Math.max(rec.band, band.offsetHeight + SEC_GAP)
     const entries = part.querySelectorAll<HTMLElement>('[data-entry]')
-    entries.forEach((el, k) => { rec.items[start + k] = el.offsetHeight })
+    entries.forEach((el, k) => { rec.items[start + k] = cache.get(el.dataset.card!) ?? el.offsetHeight })
     const add = part.querySelector<HTMLElement>('.sh-add')
     if (add && entries.length) rec.items[start + entries.length - 1] += add.offsetHeight
   })
@@ -230,34 +285,50 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
   const cols = mobile ? 1 : Math.max(1, Math.min(maxCols, Math.floor((cw + COL_GAP) / (minCol + COL_GAP))))
   const colH = cols > 1 ? Math.max(460, vp.h - (editing ? 132 : 92) - 64) : 0
   const sig = `${density}|${editing}`
+  const fitKey = `${cw}|${cols}|${density}`
+  const hc = cols > 1 ? sheetCache(HEIGHT_CACHES, `${fitKey}|${editing}`, courses) : null
+  const fc = sheetCache(FIT_CACHES, fitKey, courses)
 
   const [measured, setMeasured] = useState<{ flow: FlowSection[]; cols: number; colH: number; sig: string; pages: Page[] } | null>(null)
+  const estimated = useMemo(() => paginate(flow, null, cols, colH), [flow, cols, colH])
   const pages = measured && measured.flow === flow && measured.cols === cols && measured.colH === colH && measured.sig === sig
     ? measured.pages
-    : paginate(flow, null, cols, colH)
+    : estimated
 
-  useLayoutEffect(() => {
-    if (effMode !== 'formulas' || mySheet) return
+  /* Measure entry heights (multi-column only; a single column needs no pagination), then paginate.
+     Waits for the KaTeX fonts so nothing measured with fallback fonts gets cached, and runs a beat
+     after the last change so a window being resized isn't re-measured on every frame. */
+  useEffect(() => {
+    if (effMode !== 'formulas' || mySheet || !hc) return
     let cancelled = false
-    const run = () => {
+    let timer = 0
+    const run = async () => {
       const root = sheetRef.current
-      if (cancelled || !root) return
-      fitFormulas(root)
-      const next = paginate(flow, measureHeights(root), cols, colH)
+      if (cancelled || !root || !await measureEntries(root, hc, fc, () => cancelled)) return
+      const next = paginate(flow, measureHeights(root, hc), cols, colH)
       setMeasured(prev =>
         prev && prev.flow === flow && prev.cols === cols && prev.colH === colH && prev.sig === sig && pagesKey(prev.pages) === pagesKey(next)
           ? prev : { flow, cols, colH, sig, pages: next })
     }
-    const raf = requestAnimationFrame(run)
-    document.fonts?.ready.then(() => requestAnimationFrame(run))
-    return () => { cancelled = true; cancelAnimationFrame(raf) }
-  }, [flow, cols, colH, sig, effMode, mySheet, sheetRef, sheetW])
+    const schedule = () => { if (!cancelled) timer = window.setTimeout(() => void run(), 60) }
+    if (!document.fonts || document.fonts.status === 'loaded') schedule()
+    else document.fonts.ready.then(schedule)
+    return () => { cancelled = true; window.clearTimeout(timer) }
+  }, [flow, cols, colH, sig, effMode, mySheet, sheetRef, hc, fc])
 
-  useLayoutEffect(() => {
-    if (effMode !== 'examples') return
-    const raf = requestAnimationFrame(() => { if (sheetRef.current) fitFormulas(sheetRef.current) })
-    return () => cancelAnimationFrame(raf)
-  }, [effMode, shownExamples, sheetW, density, sheetRef])
+  /* Fit formulas lazily, as entries (or worked examples) come near the viewport. */
+  useEffect(() => {
+    const root = sheetRef.current
+    if (!root) return
+    const io = new IntersectionObserver(recs => {
+      const due = recs.filter(r => r.isIntersecting && (r.target as HTMLElement).dataset.fit !== fitKey).map(r => r.target as HTMLElement)
+      if (!due.length) return
+      fitFormulas(due, fc)
+      due.forEach(el => { el.dataset.fit = fitKey })
+    }, { rootMargin: '600px 0px' })
+    root.querySelectorAll('[data-entry], [data-ex]').forEach(el => io.observe(el))
+    return () => io.disconnect()
+  }, [sheetRef, fitKey, fc, pages, effMode, shownExamples, mySheet, editing])
 
   /* Scroll-spy: which sections (or examples) are on screen. */
   useEffect(() => {
@@ -306,9 +377,16 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
   }, [])
 
   const scrollToEl = useCallback((el: Element) => {
-    const headH = headRef.current?.offsetHeight ?? 0
-    const y = el.getBoundingClientRect().top + window.scrollY - headH - 10
-    window.scrollTo({ top: Math.max(0, y), behavior: prefersReducedMotion() ? 'auto' : 'smooth' })
+    const target = () => Math.max(0, el.getBoundingClientRect().top + window.scrollY - (headRef.current?.offsetHeight ?? 0) - 10)
+    window.scrollTo({ top: target(), behavior: prefersReducedMotion() ? 'auto' : 'smooth' })
+    // Entries rendered on the way can differ from their estimated size; settle on the real position.
+    let n = 0
+    const settle = () => {
+      const y = target()
+      if (Math.abs(window.scrollY - y) > 4 && n++ < 3) { window.scrollTo({ top: y }); window.setTimeout(settle, 80) }
+    }
+    if ('onscrollend' in window) window.addEventListener('scrollend', settle, { once: true })
+    else setTimeout(settle, 700)
   }, [])
 
   const jumpToSection = (id: string) => {
@@ -932,7 +1010,7 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
                       const { title, ref } = splitLabel(v.section.label)
                       const cards = v.cards.slice(part.start, part.end)
                       const entry = (c: Card) => (
-                        <Entry key={c.id} card={c} editing={editing} onEdit={onEditCard}
+                        <Entry key={c.id} card={c} editing={editing} onEdit={onEditCard} estH={hc?.get(c.id)} fit={fc.get(c.id)} fitKey={fitKey}
                           exampleNumbers={exampleNumbers} onExample={openExample}
                           onOpen={combo ? openCard : undefined} selected={inspSel?.kind === 'card' && inspSel.id === c.id}
                           pinned={pinnedIds.has(c.id)} onPin={isWorkspace ? togglePin : undefined} />
