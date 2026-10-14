@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { InterestTable } from '@/components/cards/InterestTable'
 import type { Card, Course, Section, WorkedExample } from '@/types'
 import { cardEquations, sortedSections, splitSectionLabel, type ListItem, type Selection } from './model'
@@ -18,6 +18,11 @@ interface Props {
   editMode: boolean
   onEditCard: (card: Card, section: Section) => void
   onEditCourse: (course: Course) => void
+  /** Shown between the previous / next buttons, e.g. "12 / 87". */
+  position?: string
+  positionLabel?: string
+  /** Extra controls at the end of the header (the inspector's close button). */
+  headExtra?: ReactNode
 }
 
 function itemTitle(it: ListItem) {
@@ -27,6 +32,18 @@ function itemContext(it: ListItem) {
   return it.kind === 'card' ? splitSectionLabel(it.section.label).main : 'Worked examples'
 }
 const selOf = (it: ListItem): Selection => ({ kind: it.kind, id: it.id })
+
+/** Shrink equations that overflow the pane (down to half size) so they fit; anything still wider scrolls in its box. */
+function fitEquations(root: HTMLElement) {
+  const els = [...root.querySelectorAll<HTMLElement>('.ix-eq-math')]
+  els.forEach(el => { el.style.fontSize = ''; el.classList.remove('ix-eq-math--scroll') })
+  const sizes = els.map(el => (el.scrollWidth > el.clientWidth + 1
+    ? parseFloat(getComputedStyle(el).fontSize) * Math.max(0.5, el.clientWidth / el.scrollWidth - 0.01)
+    : 0))
+  els.forEach((el, i) => { if (sizes[i]) el.style.fontSize = `${sizes[i].toFixed(2)}px` })
+  // Still too wide at half size: mark it so the cut edge fades out and reads as scrollable.
+  els.forEach(el => el.classList.toggle('ix-eq-math--scroll', el.scrollWidth > el.clientWidth + 1))
+}
 
 function useCopy() {
   const [copied, setCopied] = useState<string | null>(null)
@@ -46,9 +63,26 @@ export function DetailPane(p: Props) {
   const { copied, copy } = useCopy()
 
   const wide = item?.kind === 'card' && item.card.type === 'widget'
+  const itemKey = item ? `${item.kind}:${item.id}` : 'overview'
+
+  const rootRef = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    const root = rootRef.current
+    if (!root) return
+    const fit = () => fitEquations(root)
+    fit()
+    // Refit when the pane is resized, and when the content reflows (styles or fonts landing late).
+    const ro = new ResizeObserver(fit)
+    ro.observe(root)
+    const doc = root.querySelector('.ix-doc')
+    if (doc) ro.observe(doc)
+    let cancelled = false
+    document.fonts?.ready.then(() => { if (!cancelled) fit() })
+    return () => { cancelled = true; ro.disconnect() }
+  }, [itemKey])
 
   return (
-    <div className="ix-detail">
+    <div className="ix-detail" ref={rootRef}>
       <header className="ix-detail-head">
         <nav className="ix-crumbs" aria-label="Breadcrumb">
           <button type="button" className="ix-crumb" onClick={p.onOverview}>{p.course.code}</button>
@@ -56,7 +90,8 @@ export function DetailPane(p: Props) {
             <>
               <span className="ix-crumb-sep" aria-hidden="true">/</span>
               {item.kind === 'card'
-                ? <button type="button" className="ix-crumb" onClick={() => p.onJumpSection(item.section)}>
+                ? <button type="button" className="ix-crumb" title={splitSectionLabel(item.section.label).main}
+                    onClick={() => p.onJumpSection(item.section)}>
                     {splitSectionLabel(item.section.label).main}
                   </button>
                 : <span className="ix-crumb ix-crumb--static">Worked examples</span>}
@@ -71,19 +106,21 @@ export function DetailPane(p: Props) {
             </button>
           )}
           {item && <span className="ix-head-sep" aria-hidden="true" />}
-          <button type="button" className="ix-icon-btn" aria-label="Previous" title="Previous (↑)"
+          <button type="button" className="ix-icon-btn ix-step-btn" aria-label="Previous" title="Previous (↑)"
             disabled={!prev && !item} onClick={() => (prev ? p.onSelect(selOf(prev)) : p.onOverview())}>
             <ChevronUp size={16} />
           </button>
-          <button type="button" className="ix-icon-btn" aria-label="Next" title="Next (↓)"
+          {item && p.position && <span className="ix-pos" aria-label={p.positionLabel}>{p.position}</span>}
+          <button type="button" className="ix-icon-btn ix-step-btn" aria-label="Next" title="Next (↓)"
             disabled={item ? !next : p.items.length === 0}
             onClick={() => { const n = item ? next : p.items[0]; if (n) p.onSelect(selOf(n)) }}>
             <ChevronDown size={16} />
           </button>
+          {p.headExtra}
         </div>
       </header>
 
-      <div className="ix-detail-scroll" key={item ? `${item.kind}:${item.id}` : 'overview'}>
+      <div className="ix-detail-scroll" key={itemKey}>
         <article className={`ix-doc${wide ? ' ix-doc--wide' : ''}`}>
           {!item && <CourseOverview {...p} />}
           {item?.kind === 'card' && (

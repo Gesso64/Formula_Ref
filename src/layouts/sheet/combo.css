@@ -43,8 +43,24 @@
 /* ── Detail panel (Index's DetailPane) ─────────────────────────────────── */
 .ix-root.sh-insp { position: fixed; height: auto; z-index: 70; background: var(--ix-doc-bg); }
 .ix-root.sh-insp .ix-detail { flex: 1; }
-.ix-root.sh-insp .ix-detail-head { padding-right: 150px; }
-.ix-root.sh-insp .ix-doc { padding: 26px 30px 56px; }
+.ix-root.sh-insp .ix-detail-head { padding: 0 8px 0 12px; gap: 4px; }
+.ix-root.sh-insp .ix-detail-scroll { overscroll-behavior: contain; }
+.ix-root.sh-insp .ix-head-sep { display: none; }
+.ix-root.sh-insp .ix-doc { padding: 24px 24px 56px; }
+.ix-pos {
+  font-family: var(--ix-mono); font-size: 11.5px; color: var(--ix-text-3); padding: 0 2px;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+
+/* Narrow panel: slim equation gutters so formulas get the width; the copy button floats over the corner. */
+.ix-root.sh-insp:not(.sh-insp--focus) .ix-doc-title { font-size: 23px; }
+.ix-root.sh-insp:not(.sh-insp--focus) .ix-doc-title--course { font-size: 25px; }
+.ix-root.sh-insp:not(.sh-insp--focus) .ix-eq { grid-template-columns: 14px minmax(0, 1fr) auto; }
+.ix-root.sh-insp:not(.sh-insp--focus) .ix-eq-side { padding: 0 12px 0 2px; min-width: 14px; }
+.ix-root.sh-insp:not(.sh-insp--focus) .ix-eq-copy { position: absolute; top: 4px; right: 4px; background: var(--ix-plate); }
+.ix-root.sh-insp:not(.sh-insp--focus) .ix-eq-copy:hover { background: var(--ix-hover); }
+.ix-root.sh-insp:not(.sh-insp--focus) .ix-eq--main .ix-eq-math { font-size: 22px; }
+.ix-root.sh-insp:not(.sh-insp--focus) .ix-step { gap: 10px; }
 
 .ix-root.sh-insp--dock {
   z-index: 30; top: var(--sh-head-h, 92px); right: 0; bottom: 0; width: 460px;
@@ -63,11 +79,6 @@
 .sh-insp-scrim { position: fixed; inset: 0; z-index: 65; background: rgba(15, 17, 20, 0.34); }
 :root[data-theme="dark"] .sh-insp-scrim { background: rgba(0, 0, 0, 0.6); }
 
-.sh-insp-tools {
-  position: absolute; top: 0; right: 8px; z-index: 2; height: 52px;
-  display: flex; align-items: center; gap: 4px;
-}
-.sh-insp-pos { font-family: var(--ix-mono); font-size: 11.5px; color: var(--ix-text-3); padding: 0 6px; font-variant-numeric: tabular-nums; }
 .sh-insp-close, .sh-insp-pin {
   display: inline-flex; align-items: center; justify-content: center; gap: 5px; height: 32px; min-width: 32px;
   border-radius: 8px; color: var(--ix-text-2);
@@ -80,6 +91,24 @@
   inset: 0; width: auto; transform: none; border: 0; border-radius: 0;
 }
 .sh-is-mobile .ix-root.sh-insp .ix-doc { padding: 20px 16px 48px; }
+/* Phones step with the pager at the foot of the panel, so the header keeps the room for the breadcrumb. */
+.sh-is-mobile .ix-root.sh-insp .ix-step-btn { display: none; }
+.sh-is-mobile .ix-root.sh-insp .ix-pos { padding: 0 6px; }
+.sh-is-mobile .ix-root.sh-insp .ix-icon-btn, .sh-is-mobile .sh-insp-close { width: 40px; height: 40px; }
+.sh-is-mobile .ix-root.sh-insp .ix-doc-titlebar { margin-bottom: 18px; }
+.sh-is-mobile .ix-root.sh-insp .ix-eq { padding: 14px 0; }
+.sh-is-mobile .ix-root.sh-insp .ix-eq--main { padding: 20px 0; }
+.sh-is-mobile .ix-root.sh-insp .ix-eq--main .ix-eq-math { font-size: 21px; }
+.sh-is-mobile .ix-root.sh-insp .ix-eq--solo .ix-eq-math { font-size: 18px; }
+.sh-is-mobile .ix-root.sh-insp .ix-eq--sub .ix-eq-math { font-size: 16.5px; }
+.sh-is-mobile .ix-root.sh-insp .ix-step-body .ix-eq-math { font-size: 15.5px; }
+.sh-is-mobile .ix-root.sh-insp .ix-eq-copy { display: none; }
+.sh-is-mobile .ix-root.sh-insp .ix-hint { display: none; }
+.sh-is-mobile .ix-root.sh-insp .ix-pager { grid-template-columns: 1fr; gap: 8px; margin-top: 32px; }
+.sh-is-mobile .ix-root.sh-insp .ix-pager-btn--next { text-align: left; align-items: flex-start; grid-row: 1; }
+.sh-is-mobile .ix-root.sh-insp .ix-stats > div { padding: 10px 12px; min-width: 0; }
+.sh-is-mobile .ix-root.sh-insp .ix-stats dd { font-size: 19px; }
+.sh-is-mobile .ix-root.sh-insp .ix-link-meta { display: none; }
 
 /* ── Workspace course rail (Index's CourseColumn) ──────────────────────── */
 .sh-railed { padding-left: 256px; }
@@ -101,5 +130,4 @@
 }
 
 /* Small fixes */
-.ix-root.sh-insp--focus .ix-detail-head { padding-right: 210px; }
 .sh-tb-name--solo + .sh-tb-kind { margin-left: 4px; }

@@ -384,7 +384,10 @@ button.ix-crumb:hover { background: var(--ix-hover); color: var(--ix-text); }
 }
 .ix-eq + .ix-eq { border-top: 1px solid var(--ix-line); }
 .ix-eq-math { grid-column: 2; min-width: 0; overflow-x: auto; overflow-y: hidden; color: var(--ix-text); font-size: 19px; text-align: center; }
-.ix-eq-math .katex-display { margin: 0; padding: 4px 0; }
+/* overflow: visible so .ix-eq-math is the one scroll box (and DetailPane's fit can measure it) */
+.ix-eq-math .katex-display { margin: 0; padding: 4px 0; overflow: visible; }
+.ix-eq-math--scroll { -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); }
+.ix-eq-math--scroll > span { display: inline-block; padding-right: 28px; }
 .ix-eq--main { padding: 26px 0; }
 .ix-eq--main .ix-eq-math { font-size: 25px; }
 .ix-eq--sub .ix-eq-math { font-size: 18px; }

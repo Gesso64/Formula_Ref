@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect, useLayoutEffect, useCallback, type CSSProperties } from 'react'
+import { useState, useMemo, useRef, useEffect, useEffectEvent, useLayoutEffect, useCallback, type CSSProperties } from 'react'
 import { useCourses } from '@/hooks/courseModel'
 import { groupCourses } from '@/lib/courseGroups'
 import { useTheme } from '@/lib/theme'
@@ -17,7 +17,7 @@ import { loadPins, savePins, type Pin } from './pins'
 import { DetailPane } from '@/layouts/index/DetailPane'
 import { Palette } from '@/layouts/index/Palette'
 import { CourseColumn } from '@/layouts/index/CourseColumn'
-import { buildIndex, flattenCourse, type SearchDoc, type Selection } from '@/layouts/index/model'
+import { buildIndex, flattenCourse, formatHash, parseHash, type SearchDoc, type Selection } from '@/layouts/index/model'
 import { loadCollapsed, saveCollapsed } from '@/lib/courseGroups'
 import '@/layouts/index/IndexLayout.css'
 import './combo.css'
@@ -103,6 +103,15 @@ interface VisibleSection { section: Section; num: number; cards: Card[]; wide: b
 export type SheetVariant = 'sheet' | 'inspector' | 'workspace'
 
 const EMPTY_NUMBERS = new Map<string, number>()
+
+/** The course and (if it still exists) the entry a URL hash points at. */
+function readHash(courses: Course[]): { courseId: string; sel: Selection | null } | null {
+  const parsed = parseHash(window.location.hash, courses)
+  if (!parsed) return null
+  const { course, sel } = parsed
+  const found = !!sel && flattenCourse(course).some(i => i.kind === sel.kind && i.id === sel.id)
+  return { courseId: course.id, sel: found ? sel : null }
+}
 const DOCK_BP = 1100   // inspector docks beside the sheet at or above this width
 const RAIL_BP = 1024   // workspace shows the course rail at or above this width
 
@@ -127,7 +136,9 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
   const [editCard, setEditCard] = useState<{ section: Section; card?: Card } | null>(null)
   const [editSection, setEditSection] = useState<{ section?: Section; order: number } | null>(null)
   const [editCourse, setEditCourse] = useState<{ course?: Course } | null>(null)
-  const [insp, setInsp] = useState<{ courseId: string; sel: Selection | null } | null>(null)
+  // A deep link (#aer309/<cardId>) wins over the persisted active course on first render.
+  const [linked] = useState(() => (combo ? readHash(courses) : null))
+  const [insp, setInsp] = useState<{ courseId: string; sel: Selection | null } | null>(linked?.sel ? linked : null)
   const [paletteOpen, setPaletteOpen] = useState(false)
   const [pins, setPins] = useState<Pin[]>(loadPins)
   const [mySheet, setMySheet] = useState(false)
@@ -156,6 +167,7 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
   }, [])
 
   const course = activeCourse
+  const editorOpen = !!(editCard || editSection || editCourse)
   const hasExamples = (course?.examples?.length ?? 0) > 0
   const effMode: Mode = hasExamples ? mode : 'formulas'
   const terms = useMemo(() => queryTerms(query), [query])
@@ -371,7 +383,23 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
   const inspOpen = !!insp && !!course && insp.courseId === course.id
   const inspSel = inspOpen ? insp!.sel : null
   const inspIdx = inspSel ? items.findIndex(i => i.kind === inspSel.kind && i.id === inspSel.id) : -1
-  const closeInsp = useCallback(() => setInsp(null), [])
+  const inspItem = inspIdx >= 0 ? items[inspIdx] : null
+
+  /* Position among items of the same kind, so the formula count leaves out worked examples. */
+  const inspPos = useMemo(() => {
+    if (!inspItem) return null
+    const peers = items.filter(i => i.kind === inspItem.kind)
+    const n = peers.indexOf(inspItem) + 1
+    return { text: `${n} / ${peers.length}`, label: `${inspItem.kind === 'card' ? 'Formula' : 'Worked example'} ${n} of ${peers.length}` }
+  }, [items, inspItem])
+
+  /* Opening the panel pushes a history entry (see the URL sync below), so closing goes back to it. */
+  const closingInsp = useRef(false)
+  const closeInsp = useCallback(() => {
+    if (window.history.state?.shInsp) {
+      if (!closingInsp.current) { closingInsp.current = true; window.history.back() }
+    } else setInsp(null)
+  }, [])
 
   const openCard = useCallback((card: Card) => {
     if (course) setInsp({ courseId: course.id, sel: { kind: 'card', id: card.id } })
@@ -381,14 +409,75 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
     if (course) setInsp({ courseId: course.id, sel })
   }, [course])
 
-  /* Keep the selected entry visible in the sheet behind the docked panel. */
+  /* Keep the selected entry visible in the sheet behind the panel: when the selection changes, and
+     again whenever the columns reflow (the panel docking, a deep link, a resize) until the reader scrolls away. */
+  const revealing = useRef<{ id: string; follow: boolean } | null>(null)
   useEffect(() => {
-    if (!docked || inspSel?.kind !== 'card' || mySheet || effMode !== 'formulas') return
+    const stop = () => { if (revealing.current) revealing.current.follow = false }
+    const opts = { passive: true }
+    window.addEventListener('wheel', stop, opts)
+    window.addEventListener('touchmove', stop, opts)
+    window.addEventListener('pointerdown', stop, opts)
+    return () => {
+      window.removeEventListener('wheel', stop)
+      window.removeEventListener('touchmove', stop)
+      window.removeEventListener('pointerdown', stop)
+    }
+  }, [])
+  useEffect(() => {
+    if (inspSel?.kind !== 'card' || mySheet || effMode !== 'formulas') { revealing.current = null; return }
+    if (revealing.current?.id !== inspSel.id) revealing.current = { id: inspSel.id, follow: true }
+    else if (!revealing.current.follow) return
     const el = document.querySelector(`.sh-root [data-card="${CSS.escape(inspSel.id)}"]`)
     if (!el) return
     const r = el.getBoundingClientRect()
     if (r.top < headH || r.bottom > window.innerHeight) scrollToEl(el)
-  }, [docked, inspSel, mySheet, effMode, headH, scrollToEl])
+  }, [inspSel, mySheet, effMode, headH, scrollToEl, pages])
+
+  /* ── URL hash ↔ course + selected entry: #<code> · #<code>/<cardId> · #<code>/ex/<exampleId> ── */
+
+  const pendingCourse = useRef<string | null>(linked?.courseId ?? null)   // held until that course is active
+  const applyHash = useEffectEvent(() => {
+    closingInsp.current = false
+    const next = readHash(courses)
+    if (!next) { setInsp(null); return }
+    if (next.courseId !== course?.id) { pendingCourse.current = next.courseId; switchCourse(next.courseId) }
+    setInsp(next.sel ? next : null)
+  })
+  const enterLinkedCourse = useEffectEvent(() => {
+    if (pendingCourse.current && pendingCourse.current !== course?.id) switchCourse(pendingCourse.current)
+  })
+
+  useEffect(() => {
+    if (!combo) return
+    const prev = window.history.scrollRestoration
+    window.history.scrollRestoration = 'manual'   // going back closes the panel; it must not move the sheet
+    enterLinkedCourse()
+    window.addEventListener('popstate', applyHash)
+    window.addEventListener('hashchange', applyHash)
+    return () => {
+      window.history.scrollRestoration = prev
+      window.removeEventListener('popstate', applyHash)
+      window.removeEventListener('hashchange', applyHash)
+    }
+  }, [combo])
+
+  useEffect(() => {
+    if (!combo || !course) return
+    if (pendingCourse.current) {
+      if (pendingCourse.current !== course.id) return
+      pendingCourse.current = null
+    }
+    const base = window.location.pathname + window.location.search
+    const hash = formatHash(course, inspSel)
+    if (window.location.hash === hash) return
+    if (inspSel && !window.history.state?.shInsp) {
+      window.history.replaceState(null, '', base + formatHash(course, null))
+      window.history.pushState({ shInsp: true }, '', base + hash)
+    } else {
+      window.history.replaceState(inspSel ? window.history.state : null, '', base + hash)
+    }
+  }, [combo, course, inspSel])
 
   const searchIndex = useMemo(() => (combo ? buildIndex(courses) : []), [combo, courses])
 
@@ -448,8 +537,8 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
     if (!combo) return
     const onKey = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); setPaletteOpen(o => !o); return }
-      if (!inspOpen || paletteOpen || e.metaKey || e.ctrlKey || e.altKey) return
-      if ((e.target as HTMLElement).closest('input, textarea, select, [contenteditable="true"], [role="dialog"]')) return
+      if (!inspOpen || paletteOpen || editorOpen || e.metaKey || e.ctrlKey || e.altKey) return
+      if ((e.target as HTMLElement).closest('input, textarea, select, [contenteditable="true"]')) return
       const step = (d: number) => {
         e.preventDefault()
         const i = Math.max(0, Math.min(items.length - 1, (inspIdx < 0 ? -1 : inspIdx) + d))
@@ -462,7 +551,7 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [combo, inspOpen, paletteOpen, items, inspIdx, isWorkspace, selectItem, closeInsp])
+  }, [combo, inspOpen, paletteOpen, editorOpen, items, inspIdx, isWorkspace, selectItem, closeInsp])
 
   /* Keyboard: "/" focuses search (opens the palette in the combined layouts). */
   useEffect(() => {
@@ -937,22 +1026,21 @@ export default function SheetLayout({ variant = 'sheet' }: { variant?: SheetVari
           {!docked && <div className="sh-insp-scrim" onClick={closeInsp} />}
           <aside className={`ix-root sh-insp ${isWorkspace ? 'sh-insp--focus' : docked ? 'sh-insp--dock' : 'sh-insp--drawer'}`}
             style={ixAccent} aria-label="Formula detail" role={docked ? undefined : 'dialog'}>
-            <div className="sh-insp-tools">
-              {inspIdx >= 0 && <span className="sh-insp-pos">{inspIdx + 1} / {items.length}</span>}
-              {isWorkspace && inspSel?.kind === 'card' && (() => {
-                const card = items[inspIdx]?.kind === 'card' ? (items[inspIdx] as { card: Card }).card : null
-                return card && (
-                  <button type="button" className={`sh-insp-pin${pinnedIds.has(card.id) ? ' is-on' : ''}`}
-                    aria-pressed={pinnedIds.has(card.id)} onClick={() => togglePin(card)}>
-                    <IconPin size={14} />{pinnedIds.has(card.id) ? 'Pinned' : 'Pin'}
-                  </button>
-                )
-              })()}
-              <button type="button" className="sh-insp-close" aria-label="Close" title="Close (Esc)" onClick={closeInsp}>
-                <IconClose size={15} />
-              </button>
-            </div>
             <DetailPane course={course} items={items} index={inspIdx} onSelect={selectItem}
+              position={inspPos?.text} positionLabel={inspPos?.label}
+              headExtra={
+                <>
+                  {isWorkspace && inspItem?.kind === 'card' && (
+                    <button type="button" className={`sh-insp-pin${pinnedIds.has(inspItem.id) ? ' is-on' : ''}`}
+                      aria-pressed={pinnedIds.has(inspItem.id)} onClick={() => togglePin(inspItem.card)}>
+                      <IconPin size={14} />{pinnedIds.has(inspItem.id) ? 'Pinned' : 'Pin'}
+                    </button>
+                  )}
+                  <button type="button" className="sh-insp-close" aria-label="Close" title="Close (Esc)" onClick={closeInsp}>
+                    <IconClose size={15} />
+                  </button>
+                </>
+              }
               onOverview={() => selectItem(null)}
               onJumpSection={sec => { if (!docked) closeInsp(); jumpToSection(sec.id) }}
               editMode={editing} onEditCard={(card, section) => setEditCard({ section, card })}
