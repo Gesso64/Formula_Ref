@@ -10,7 +10,7 @@ import {
   type Density, type Mode, type FlowSection, type Page, type Heights,
   splitLabel, shortLabel, sortedCards, paginate, pagesKey, loadDensity, saveDensity,
 } from './model'
-import { buildIndex, flattenCourse, formatHash, labPdfUrl, parseHash, prefetchPdf, sheetUrl, type SearchDoc, type Selection } from './paneModel'
+import { buildIndex, flattenCourse, formatHash, labHeading, labPdfUrl, labShort, parseHash, prefetchPdf, sheetUrl, type SearchDoc, type Selection } from './paneModel'
 import { SheetViewer } from './SheetViewer'
 import { Entry } from './Entry'
 import { ExampleBlock } from './Examples'
@@ -495,7 +495,7 @@ export default function InspectorLayout() {
     if (r.top < headH || r.bottom > window.innerHeight) scrollToEl(el)
   }, [inspSel, effMode, headH, scrollToEl, pages])
 
-  /* ── URL hash ↔ course + selected entry: #<code> · #<code>/<cardId> · #<code>/ex/<exampleId> · #<code>/lab/<n> ── */
+  /* ── URL hash ↔ course + selected entry: #<code> · #<code>/<cardId> · #<code>/ex/<exampleId> · #<code>/set/<n> ── */
 
   const pendingCourse = useRef<string | null>(linked?.courseId ?? null)   // held until that course is active
   const applyHash = useEffectEvent(() => {
@@ -747,7 +747,7 @@ export default function InspectorLayout() {
       )}
       {hasLabs && (
         <button type="button" aria-pressed={effMode === 'labs'} onClick={() => switchMode('labs')}>
-          <span>{!mobile && <span className="sh-seg-long">Practice </span>}Labs</span>
+          Practice
         </button>
       )}
     </div>
@@ -780,8 +780,9 @@ export default function InspectorLayout() {
           )}
           {!mobile && (
             <button type="button" className={`sh-textbtn sh-editbtn${editing ? ' is-on' : ''}`} aria-pressed={editing}
+              aria-label={editing ? 'Done editing' : 'Edit'} title={editing ? 'Done editing' : 'Edit'}
               onClick={() => setEditing(e => !e)}>
-              <IconPencil size={14} />{editing ? 'Done' : 'Edit'}
+              <IconPencil size={14} /><span className="sh-editbtn-label">{editing ? 'Done' : 'Edit'}</span>
             </button>
           )}
           {!mobile && (
@@ -797,7 +798,7 @@ export default function InspectorLayout() {
 
         {/* ── Section index strip ── */}
         {course && (
-          <nav className="sh-strip" aria-label={effMode === 'formulas' ? 'Sections' : effMode === 'labs' ? 'Practice labs' : 'Worked examples'}>
+          <nav className="sh-strip" aria-label={effMode === 'formulas' ? 'Sections' : effMode === 'labs' ? 'Practice sets' : 'Worked examples'}>
             <div className="sh-strip-inner" ref={stripRef}>
               {effMode === 'formulas'
                 ? visible.map(v => {
@@ -813,10 +814,10 @@ export default function InspectorLayout() {
                   })
                 : effMode === 'labs'
                 ? labs.map(l => (
-                    <button key={l.id} type="button" data-chip={l.id} title={`Lab ${l.number} · ${l.title}`}
+                    <button key={l.id} type="button" data-chip={l.id} title={`${labHeading(l)} · ${l.title}`}
                       className={`sh-chip sh-chip--q${l === lab ? ' is-active' : ''}`} aria-current={l === lab ? 'page' : undefined}
                       onClick={() => openLab(l.number)}>
-                      <span className="sh-chip-num">{l.number}</span>
+                      <span className="sh-chip-num">{labShort(l)}</span>
                       <span className="sh-chip-qt">{l.title}</span>
                     </button>
                   ))
@@ -862,14 +863,14 @@ export default function InspectorLayout() {
               <div className="sh-tb-row">
                 <span className="sh-tb-code">{course.code}</span>
                 <h1 className="sh-tb-name">{course.name}</h1>
-                <span className="sh-tb-kind">{effMode === 'formulas' ? 'Formula sheet' : effMode === 'labs' ? 'Practice labs' : 'Worked examples'}</span>
+                <span className="sh-tb-kind">{effMode === 'formulas' ? 'Formula sheet' : effMode === 'labs' ? 'Practice' : 'Worked examples'}</span>
               </div>
               <div className="sh-tb-meta">
                 {course.description && <span>{course.description}</span>}
                 {effMode === 'formulas'
                   ? <span>{sections.length} sections · {totalCount} entries</span>
                   : effMode === 'labs'
-                  ? <span>{labs.length} practice sets · {labs.reduce((n, l) => n + l.problems.length, 0)} problems</span>
+                  ? <span>{labs.length} practice {labs.length === 1 ? 'set' : 'sets'} · {labs.reduce((n, l) => n + l.problems.length, 0)} problems</span>
                   : <span>{course.examples!.length} problems{course.examples![0]?.source ? ` · ${course.examples![0].source}` : ''}</span>}
                 {course.term && <span className="sh-tb-term">{course.term}</span>}
               </div>
@@ -935,7 +936,7 @@ export default function InspectorLayout() {
             )}
 
             <footer className="sh-colophon">
-              {course.code} · {course.name} — {effMode === 'formulas' ? 'formula sheet' : effMode === 'labs' ? 'practice labs' : 'worked examples'}
+              {course.code} · {course.name} — {effMode === 'formulas' ? 'formula sheet' : effMode === 'labs' ? 'practice' : 'worked examples'}
             </footer>
           </>
         )}

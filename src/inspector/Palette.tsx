@@ -18,7 +18,7 @@ const KIND_ICON: Record<ResultKind, ReactNode> = {
   section: <LayersIcon size={15} />,
   course: <CourseIcon size={15} />,
 }
-const KIND_LABEL: Record<ResultKind, string> = { card: 'Formula', example: 'Worked example', lab: 'Practice lab', section: 'Section', course: 'Course' }
+const KIND_LABEL: Record<ResultKind, string> = { card: 'Formula', example: 'Worked example', lab: 'Practice', section: 'Section', course: 'Course' }
 
 function highlight(text: string, query: string): ReactNode {
   const terms = query.trim().split(/\s+/).filter(t => t.length > 0).map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))

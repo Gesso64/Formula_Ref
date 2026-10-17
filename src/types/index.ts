@@ -91,15 +91,20 @@ export interface PracticeProblem {
   method: string;     // the solution's one-line approach (kept behind the reveal)
   statement: string;
   solution: string;
+  figure?: string;    // image path under public/, shown below the statement
+  solutionFigure?: string;  // image path under public/, shown at the top of the solution
 }
 
+/* A practice set in the Practice view: a lab's problem set, or test practice. */
 export interface PracticeLab {
   id: string;
-  number: number;
+  number: number;     // sort order and the #<code>/lab/<n> hash
+  heading?: string;   // display name; defaults to "Set <number>"
+  short?: string;     // chip badge; defaults to the number
   title: string;
   ref: string;        // textbook sections, e.g. "§2.2, 2.3"
   blurb: string;      // what the set covers
   intro: string;      // key-methods recap shown above the problems
-  pdf?: string;       // printable version under public/labs/
+  pdf?: string;       // printable version, a path under public/
   problems: PracticeProblem[];
 }

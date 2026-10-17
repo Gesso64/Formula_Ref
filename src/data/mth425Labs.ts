@@ -1,6 +1,6 @@
 import type { PracticeLab } from '@/types'
 
-/* Generated from the MTH425 practice sets (labs/labN-practice-set.md in the Aerospace Semester 3 repo).
+/* Generated from the MTH425 practice sets (labN-practice-set.md in the Aerospace Semester 3 repo).
    Text is Markdown with $…$ / $$…$$ KaTeX math, rendered by renderMarkdown in src/lib/markdown.ts. */
 
 export const MTH425_LABS: PracticeLab[] = [
@@ -8,8 +8,8 @@ export const MTH425_LABS: PracticeLab[] = [
     id: 'mth425-lab1',
     number: 1,
     title: 'Separable and first-order linear DEs',
-    ref: '§2.2, 2.3',
-    blurb: 'Hand-solving drill for the Lab 1 quiz material. Closed book, about 10 minutes per problem. Problems 1 to 4 are separable, problems 5 to 8 are linear. Every solution was checked by substituting back into the ODE.',
+    ref: 'Zill §2.2, 2.3',
+    blurb: 'Hand-solving drill. Closed book, about 10 minutes per problem. Problems 1 to 4 are separable, problems 5 to 8 are linear. Every solution was checked by substituting back into the ODE.',
     intro: String.raw`**Separable.** $\dfrac{dy}{dx} = g(x)h(y)$. Steps:
 
 1. Find the constants $y = b$ where $h(b) = 0$. Each is a solution, set aside.
@@ -34,7 +34,7 @@ $\dfrac{dx}{dy} + P(y)\,x = f(y)$.
 on which $P$ and $f$ are continuous. For a separable DE, it is the largest interval containing the
 initial $x$ on which the solution formula is defined and still satisfies the DE (watch square roots,
 logarithms, and denominators). Apply the initial condition to the **whole** general solution.`,
-    pdf: 'mth425-lab1-practice.pdf',
+    pdf: 'practice/mth425/set1.pdf',
     problems: [
       {
         id: 'mth425-lab1-p1',
@@ -241,8 +241,8 @@ Check: $\dfrac{dx}{dy} = 12y^5 + 4cy^3$ and $\dfrac{4(x + y^6)}{y} = \dfrac{4(3y
     id: 'mth425-lab2',
     number: 2,
     title: 'Exact equations and substitution',
-    ref: '§2.4, 2.5',
-    blurb: 'Prep for the Lab 2 quiz. Closed book, about 10 minutes per problem. Eight problems, one per method, with the last one solvable two ways. Classify first, then solve, then check by differentiating the answer. Every solution was checked independently.',
+    ref: 'Zill §2.4, 2.5',
+    blurb: 'Quiz prep. Closed book, about 10 minutes per problem. Eight problems, one per method, with the last one solvable two ways. Classify first, then solve, then check by differentiating the answer. Every solution was checked independently.',
     intro: String.raw`**Exact.** Write the equation as $M\,dx + N\,dy = 0$. It is exact when $M_y = N_x$. Then
 $F = \int M\,dx + g(y)$, and $g$ comes from $F_y = N$. The answer is $F(x,y) = c$.
 
@@ -262,7 +262,7 @@ Check whether $\mu$ lost a solution (a line where $\mu$ is undefined or zero).
 | $y' = f(Ax + By + C),\ B \ne 0$ | $u = Ax + By + C,\ \ u' = A + By'$ | separable: $u' = A + Bf(u)$ |
 
 Go back to $y$ at the end. State where the answer is valid.`,
-    pdf: 'mth425-lab2-practice.pdf',
+    pdf: 'practice/mth425/set2.pdf',
     problems: [
       {
         id: 'mth425-lab2-p1',
@@ -516,8 +516,8 @@ So $F_x\,dx + F_y\,dy = 2x\,(M\,dx + N\,dy) = 0$.`,
     id: 'mth425-lab3',
     number: 3,
     title: 'First-order DEs, all types',
-    ref: '§2.2–2.5',
-    blurb: 'Zill §2.2 to 2.5. Prep for the Wed Sep 30 lab quiz. Closed book, about 10 minutes per problem. The equations are in no particular order and none of them is labelled. For each one, name the type and say why before you start solving; that is the skill this quiz tests. Some fit more than one type. Every solution was checked by substituting back.',
+    ref: 'Zill §2.2–2.5',
+    blurb: 'Zill §2.2 to 2.5. Quiz prep. Closed book, about 10 minutes per problem. The equations are in no particular order and none of them is labelled. For each one, name the type and say why before you start solving; that is the skill this quiz tests. Some fit more than one type. Every solution was checked by substituting back.',
     intro: String.raw`**Which type is it? Check in this order.**
 
 | Type | Test | Method |
@@ -533,7 +533,7 @@ So $F_x\,dx + F_y\,dy = 2x\,(M\,dx + N\,dy) = 0$.`,
 
 **Finish.** Apply initial conditions last. State the interval of validity and any singular
 solutions.`,
-    pdf: 'mth425-lab3-practice.pdf',
+    pdf: 'practice/mth425/set3.pdf',
     problems: [
       {
         id: 'mth425-lab3-p1',
@@ -680,8 +680,8 @@ is shorter.`,
     id: 'mth425-lab4',
     number: 4,
     title: 'Undetermined coefficients',
-    ref: '§3.4',
-    blurb: 'Prep for the Wed Oct 7 lab quiz. Closed book, about 10 minutes per problem. Part A (problems 1 to 8): solve. Part B: write the form of $y_p$ only, or say the method does not apply and why. Every solution was checked by substituting back.',
+    ref: 'Zill §3.4',
+    blurb: 'Quiz prep. Closed book, about 10 minutes per problem. Part A (problems 1 to 8): solve. Part B: write the form of $y_p$ only, or say the method does not apply and why. Every solution was checked by substituting back.',
     intro: String.raw`**Homogeneous part.** For $ay'' + by' + cy = 0$ solve $am^2 + bm + c = 0$:
 
 | Roots | $y_c$ |
@@ -706,7 +706,7 @@ $x^s$, where $s$ is the smallest integer that removes every overlap (the multipl
 matching root).
 
 **Finish.** $y = y_c + y_p$. Apply initial conditions last, to the whole $y$.`,
-    pdf: 'mth425-lab4-practice.pdf',
+    pdf: 'practice/mth425/set4.pdf',
     problems: [
       {
         id: 'mth425-lab4-p1',
@@ -901,7 +901,7 @@ $$y_p = x^2(Ax + B) + Cxe^x$$`,
         statement: String.raw`$y'' + y = \sec x$`,
         solution: String.raw`**The method does not apply.** $\sec x$ is not a polynomial, exponential, sine, cosine or a
 product of them, and its derivatives never settle into a finite family to guess from. Use
-variation of parameters (Lab 5, §3.5).`,
+variation of parameters (Set 5, §3.5).`,
       },
       {
         id: 'mth425-lab4-bd',
@@ -927,8 +927,8 @@ and the table of guesses assumes constant coefficients.`,
     id: 'mth425-lab5',
     number: 5,
     title: 'Variation of parameters',
-    ref: '§3.5',
-    blurb: 'Prep for the Wed Oct 14 lab quiz. Closed book, about 10 minutes per problem. Solve each equation, using variation of parameters unless the problem says otherwise. Problems 1 to 5 have forcing that undetermined coefficients cannot handle, problem 6 is variable-coefficient, problem 7 is an initial value problem, and problem 8 can be done both ways. Every solution was checked by substituting back.',
+    ref: 'Zill §3.5',
+    blurb: 'Quiz prep. Closed book, about 10 minutes per problem. Solve each equation, using variation of parameters unless the problem says otherwise. Problems 1 to 5 have forcing that undetermined coefficients cannot handle, problem 6 is variable-coefficient, problem 7 is an initial value problem, and problem 8 can be done both ways. Every solution was checked by substituting back.',
     intro: String.raw`**Standard form first.** Divide through so the equation reads $y'' + P(x)y' + Q(x)y = f(x)$. The
 $f$ in every formula below is the right side of *this* form.
 
@@ -951,7 +951,7 @@ W_2 = \begin{vmatrix} y_1 & 0 \\ y_1' & f \end{vmatrix} = y_1f$$
 constants of integration can be dropped).
 
 **Step 4.** $y_p = u_1y_1 + u_2y_2$ and $y = y_c + y_p$. Apply initial conditions last, to the whole $y$.`,
-    pdf: 'mth425-lab5-practice.pdf',
+    pdf: 'practice/mth425/set5.pdf',
     problems: [
       {
         id: 'mth425-lab5-p1',
@@ -1190,8 +1190,8 @@ overlap rule.`,
     id: 'mth425-lab6',
     number: 6,
     title: 'Laplace transforms',
-    ref: '§4.2, 4.3',
-    blurb: 'Prep for the Wed Oct 21 lab quiz. Closed book, about 10 minutes per problem. Problem 1 is forward transforms, problems 2 to 4 are inverse transforms, problem 5 is unit step functions, and problems 6 to 8 are initial value problems solved with Laplace transforms (problem 8 has a step-function forcing). Convolution, $t\\,f(t)$, periodic functions, the Dirac delta and systems are left to Lab 7. Every answer was checked independently. Pair names follow the course Laplace table.',
+    ref: 'Zill §4.2, 4.3',
+    blurb: 'Quiz prep. Closed book, about 10 minutes per problem. Problem 1 is forward transforms, problems 2 to 4 are inverse transforms, problem 5 is unit step functions, and problems 6 to 8 are initial value problems solved with Laplace transforms (problem 8 has a step-function forcing). Convolution, $t\\,f(t)$, periodic functions, the Dirac delta and systems are left to Set 7. Every answer was checked independently. Pair names follow the course Laplace table.',
     intro: String.raw`**Transform pairs** (table rows, $\mathcal{L}\{f\} = F(s)$, $k$ and $a$ constants):
 
 | Row in the table | $f(t)$ | $F(s)$ |
@@ -1213,7 +1213,7 @@ needs a factor $1/k$. For $s^2 + bs + c$ with complex roots, complete the square
 $(s+p)^2 + q^2$, rewrite the numerator in terms of $s+p$, and read off $e^{-pt}\cos qt$ and
 $e^{-pt}\sin qt$. For an IVP, transform both sides, solve for $Y(s)$, split into partial fractions,
 invert.`,
-    pdf: 'mth425-lab6-practice.pdf',
+    pdf: 'practice/mth425/set6.pdf',
     problems: [
       {
         id: 'mth425-lab6-p1',
@@ -1498,8 +1498,8 @@ second-order equation.`,
     id: 'mth425-lab7',
     number: 7,
     title: 'Laplace transforms, operational properties and systems',
-    ref: '§4.2, 4.3, 4.6',
-    blurb: 'Prep for the Wed Oct 28 lab quiz. Closed book, about 10 minutes per problem. Lab 6 covered the basic pairs, partial fractions, derivatives, the s-shift and the unit step; here those steps are only the machinery. The new ideas are the derivative of a transform, convolution, periodic functions, the delta function and a 2 by 2 system. Every solution was checked with sympy.',
+    ref: 'Zill §4.2, 4.3, 4.6',
+    blurb: 'Quiz prep. Closed book, about 10 minutes per problem. Set 6 covered the basic pairs, partial fractions, derivatives, the s-shift and the unit step; here those steps are only the machinery. The new ideas are the derivative of a transform, convolution, periodic functions, the delta function and a 2 by 2 system. Every solution was checked with sympy.',
     intro: String.raw`**From the course table**, with $F(s) = \mathcal{L}\{f(t)\}$:
 
 | $f(t)$ | $\mathcal{L}\{f(t)\}$ | $f(t)$ | $\mathcal{L}\{f(t)\}$ |
@@ -1522,7 +1522,7 @@ second-order equation.`,
 
 **System of two equations.** Transform both, solve the 2 by 2 algebraic system for $X(s)$ and $Y(s)$
 (Cramer's rule), then invert each.`,
-    pdf: 'mth425-lab7-practice.pdf',
+    pdf: 'practice/mth425/set7.pdf',
     problems: [
       {
         id: 'mth425-lab7-p1',
@@ -1803,8 +1803,8 @@ The $t^2\cos 2t$ term is the resonance: the amplitude grows without bound.`,
     id: 'mth425-lab8',
     number: 8,
     title: 'Vector functions, directional derivatives, tangent planes',
-    ref: '§9.1, 9.5, 9.6',
-    blurb: 'Prep for the Lab 8 quiz. Closed book, about 10 minutes per problem. Problems 1 and 2 are vector-valued functions of one variable (limits, derivatives, integrals, tangent vectors, arc length), problems 3 and 4 are gradients and directional derivatives, problems 5 and 6 are tangent planes and normal lines, and problems 7 and 8 use the same ideas to find special points and the angle between two surfaces. No figures are given, so describe the geometry in words as you go. Every answer was recomputed independently and compared with the written result.',
+    ref: 'Zill §9.1, 9.5, 9.6',
+    blurb: 'Quiz prep. Closed book, about 10 minutes per problem. Problems 1 and 2 are vector-valued functions of one variable (limits, derivatives, integrals, tangent vectors, arc length), problems 3 and 4 are gradients and directional derivatives, problems 5 and 6 are tangent planes and normal lines, and problems 7 and 8 use the same ideas to find special points and the angle between two surfaces. No figures are given, so describe the geometry in words as you go. Every answer was recomputed independently and compared with the written result.',
     intro: String.raw`**Vector functions.** For $\mathbf{r}(t) = \langle x(t),\,y(t),\,z(t)\rangle$, limits, derivatives and
 integrals act on each component. The derivative $\mathbf{r}'(t)$ is tangent to the curve, and
 
@@ -1828,7 +1828,7 @@ x = x_0 + F_x t,\quad y = y_0 + F_y t,\quad z = z_0 + F_z t$$
 
 All three partials are evaluated at the point. For $z = f(x,y)$ use $F = f(x,y) - z$, so the normal is
 $\langle f_x, f_y, -1\rangle$. The angle between two surfaces is the angle between their normals.`,
-    pdf: 'mth425-lab8-practice.pdf',
+    pdf: 'practice/mth425/set8.pdf',
     problems: [
       {
         id: 'mth425-lab8-p1',
@@ -2101,8 +2101,8 @@ negative, the angle between the surfaces would still be quoted as the acute one,
     id: 'mth425-lab9',
     number: 9,
     title: 'Curl, divergence and line integrals',
-    ref: '§9.7, 9.8, 9.9',
-    blurb: 'Prep for the Wed Nov 11 lab quiz. Closed book, about 10 minutes per problem. Problems 1 and 2 are about div, curl and the conservative tests. Problems 3 to 5 are line integrals computed by parameterizing, for a scalar function, for work, and in the form $P\\,dx + Q\\,dy + R\\,dz$. Problems 6 and 7 find a potential and use it, including a closed curve. Problem 8 is a field that is not conservative, so the only way through is to parameterize. No figures: every curve is described in words, with its parameterization and orientation stated. Every answer was recomputed independently by direct parameterization and, where a potential exists, through the potential.',
+    ref: 'Zill §9.7, 9.8, 9.9',
+    blurb: 'Quiz prep. Closed book, about 10 minutes per problem. Problems 1 and 2 are about div, curl and the conservative tests. Problems 3 to 5 are line integrals computed by parameterizing, for a scalar function, for work, and in the form $P\\,dx + Q\\,dy + R\\,dz$. Problems 6 and 7 find a potential and use it, including a closed curve. Problem 8 is a field that is not conservative, so the only way through is to parameterize. No figures: every curve is described in words, with its parameterization and orientation stated. Every answer was recomputed independently by direct parameterization and, where a potential exists, through the potential.',
     intro: String.raw`**Divergence and curl.** For $\mathbf F = \langle P, Q, R\rangle$:
 
 $$\operatorname{div}\mathbf F = P_x + Q_y + R_z, \qquad
@@ -2129,7 +2129,7 @@ variables), then match $\varphi_y = Q$ and $\varphi_z = R$ to pin that function 
 **Fundamental theorem for line integrals.** If $\mathbf F = \nabla\varphi$, then
 $\displaystyle\int_C \mathbf F\cdot d\mathbf r = \varphi(B) - \varphi(A)$, with $A$ the start and $B$
 the end of $C$. The path does not matter, and a closed curve gives $0$.`,
-    pdf: 'mth425-lab9-practice.pdf',
+    pdf: 'practice/mth425/set9.pdf',
     problems: [
       {
         id: 'mth425-lab9-p1',
@@ -2417,8 +2417,8 @@ and up the line $x = 1$ the integrand is $x^2\,dy = dy$. That is a third value f
     id: 'mth425-lab10',
     number: 10,
     title: 'Double integrals and Green\'s theorem',
-    ref: '§9.10, 9.11, 9.12',
-    blurb: 'Prep for the Wed Nov 18 lab quiz. Closed book, about 10 minutes per problem. Problems 1 to 3 are iterated integrals (both orders, reversing the order, area and volume), problem 4 is polar coordinates, and problems 5 to 8 are Green\'s theorem. No figures are given: sketch each region yourself from the description, and write its limits before you integrate. Every answer was recomputed independently, and the Green\'s theorem problems were checked on both sides.',
+    ref: 'Zill §9.10, 9.11, 9.12',
+    blurb: 'Quiz prep. Closed book, about 10 minutes per problem. Problems 1 to 3 are iterated integrals (both orders, reversing the order, area and volume), problem 4 is polar coordinates, and problems 5 to 8 are Green\'s theorem. No figures are given: sketch each region yourself from the description, and write its limits before you integrate. Every answer was recomputed independently, and the Green\'s theorem problems were checked on both sides.',
     intro: String.raw`**Iterated integrals.** Type I region: $a \le x \le b,\ g_1(x) \le y \le g_2(x)$, and
 $$\iint_R f\,dA = \int_a^b\!\int_{g_1(x)}^{g_2(x)} f\,dy\,dx$$
 Type II region: $c \le y \le d,\ h_1(y) \le x \le h_2(y)$, and
@@ -2437,7 +2437,7 @@ first partials on an open region containing $R$ and $C$, then
 $$\oint_C P\,dx + Q\,dy = \iint_R \Big(\frac{\partial Q}{\partial x} - \frac{\partial P}{\partial y}\Big)dA$$
 Clockwise traversal flips the sign. **Area:**
 $A = \tfrac{1}{2}\oint_C x\,dy - y\,dx$ (also $\oint x\,dy$ or $-\oint y\,dx$ alone).`,
-    pdf: 'mth425-lab10-practice.pdf',
+    pdf: 'practice/mth425/set10.pdf',
     problems: [
       {
         id: 'mth425-lab10-p1',
@@ -2711,8 +2711,8 @@ hold and the integral is $0$.`,
     id: 'mth425-lab11',
     number: 11,
     title: 'Surface integrals and Stokes\' theorem',
-    ref: '§9.13, 9.14',
-    blurb: 'Prep for the Wed Nov 25 lab quiz. Closed book, about 10 minutes per problem. Problems 1 to 4 are surface area and surface integrals of scalar functions (graphs first, then parametric surfaces), problems 5 and 6 are flux integrals, problem 7 verifies Stokes\' theorem by computing both sides, and problem 8 uses Stokes\' theorem to swap a curved surface for a flat one with the same boundary. Every answer was recomputed by a second route.',
+    ref: 'Zill §9.13, 9.14',
+    blurb: 'Quiz prep. Closed book, about 10 minutes per problem. Problems 1 to 4 are surface area and surface integrals of scalar functions (graphs first, then parametric surfaces), problems 5 and 6 are flux integrals, problem 7 verifies Stokes\' theorem by computing both sides, and problem 8 uses Stokes\' theorem to swap a curved surface for a flat one with the same boundary. Every answer was recomputed by a second route.',
     intro: String.raw`**Scalar surface integrals.** For $S$ the graph $z = g(x,y)$ over a region $R$ of the $xy$-plane:
 
 $$dS = \sqrt{1 + g_x^2 + g_y^2}\;dA, \qquad \iint_S f\,dS = \iint_R f\big(x,y,g(x,y)\big)\sqrt{1 + g_x^2 + g_y^2}\;dA$$
@@ -2736,7 +2736,7 @@ $$\iint_S (\nabla\times\mathbf F)\cdot\mathbf n\,dS = \oint_C \mathbf F\cdot d\m
 
 Orientation of $C$ by the right-hand rule: with the thumb along $\mathbf n$, the fingers curl in the
 direction of travel on $C$. For an upward normal this means counterclockwise seen from above.`,
-    pdf: 'mth425-lab11-practice.pdf',
+    pdf: 'practice/mth425/set11.pdf',
     problems: [
       {
         id: 'mth425-lab11-p1',
@@ -2977,8 +2977,8 @@ curved cap with one line of arithmetic.`,
     id: 'mth425-lab12',
     number: 12,
     title: 'Triple integrals and the divergence theorem',
-    ref: '§9.15, 9.16',
-    blurb: 'Prep for the Lab 12 quiz (week of Nov 30). Closed book, about 10 minutes per problem. Problems 1 and 2 are rectangular coordinates (planes, then surfaces), problem 3 is cylindrical, problem 4 is spherical, and problem 5 is about choosing the system. Problems 6 to 8 are the divergence theorem: verify both sides, close an open surface with a cap, and check the hypotheses. No figures are given, so sketch each solid before you set limits. State the coordinate system and the limits before you integrate. Every answer was recomputed by a different route.',
+    ref: 'Zill §9.15, 9.16',
+    blurb: 'Quiz prep. Closed book, about 10 minutes per problem. Problems 1 and 2 are rectangular coordinates (planes, then surfaces), problem 3 is cylindrical, problem 4 is spherical, and problem 5 is about choosing the system. Problems 6 to 8 are the divergence theorem: verify both sides, close an open surface with a cap, and check the hypotheses. No figures are given, so sketch each solid before you set limits. State the coordinate system and the limits before you integrate. Every answer was recomputed by a different route.',
     intro: String.raw`**Cylindrical.** $x = r\cos\theta,\ y = r\sin\theta,\ z = z$, with $dV = r\,dz\,dr\,d\theta$ and
 $x^2 + y^2 = r^2$. Use it when the solid has an axis of symmetry along $z$: cylinders, paraboloids
 $z = x^2 + y^2$, discs as shadows.
@@ -2999,7 +2999,7 @@ $$\iint_S \mathbf F\cdot\mathbf n\,dS = \iiint_D \nabla\cdot\mathbf F\,dV, \qqua
 
 Check all four hypotheses first: closed, piecewise smooth, outward orientation, $\mathbf F$ is $C^1$
 everywhere inside $D$ (including its interior points).`,
-    pdf: 'mth425-lab12-practice.pdf',
+    pdf: 'practice/mth425/set12.pdf',
     problems: [
       {
         id: 'mth425-lab12-p1',

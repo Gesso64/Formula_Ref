@@ -2,6 +2,7 @@ import { memo, useState } from 'react'
 import { renderMarkdown, renderMarkdownInline } from '@/lib/markdown'
 import type { PracticeLab, PracticeProblem } from '@/types'
 import { IconFile } from './icons'
+import { assetUrl, labHeading } from './paneModel'
 
 const Md = memo(function Md({ src, className }: { src: string; className?: string }) {
   return <div className={`sh-md ${className ?? ''}`} dangerouslySetInnerHTML={{ __html: renderMarkdown(src) }} />
@@ -18,6 +19,7 @@ const Problem = memo(function Problem({ p, open, flash, onToggle }: {
       <div className="sh-prob-label">{p.label}</div>
       <div className="sh-prob-body">
         <Md src={p.statement} className="sh-prob-q" />
+        {p.figure && <img className="sh-prob-fig" src={assetUrl(p.figure)} alt={`Figure for problem ${p.label}`} loading="lazy" />}
         <button type="button" className="sh-prob-toggle" aria-expanded={open} aria-controls={`sh-sol-${p.id}`}
           onClick={() => onToggle(p.id)}>
           {open ? 'Hide solution' : 'Show solution'}
@@ -25,6 +27,7 @@ const Problem = memo(function Problem({ p, open, flash, onToggle }: {
         {open && (
           <section className="sh-prob-sol" id={`sh-sol-${p.id}`} aria-label="Solution">
             {p.method && <div className="sh-prob-method" dangerouslySetInnerHTML={{ __html: renderMarkdownInline(p.method) }} />}
+            {p.solutionFigure && <img className="sh-prob-fig" src={assetUrl(p.solutionFigure)} alt={`Solution figure for problem ${p.label}`} loading="lazy" />}
             <Md src={p.solution} />
           </section>
         )}
@@ -65,9 +68,9 @@ export function LabView({ lab, flash, prev, next, onLab, pdfUrl }: {
   return (
     <div className="sh-lab">
       <header className="sh-band sh-band--lab">
-        <span className="sh-band-num">Lab {lab.number}</span>
+        <span className="sh-band-num">{labHeading(lab)}</span>
         <h2 className="sh-band-title">{lab.title}</h2>
-        <span className="sh-band-ref">Zill {lab.ref}</span>
+        <span className="sh-band-ref">{lab.ref}</span>
       </header>
       <div className="sh-lab-sub">
         <p className="sh-lab-blurb" dangerouslySetInnerHTML={{ __html: renderMarkdownInline(lab.blurb) }} />
@@ -86,12 +89,12 @@ export function LabView({ lab, flash, prev, next, onLab, pdfUrl }: {
         <nav className="sh-lab-nav" aria-label="Other labs">
           {prev && (
             <button type="button" className="sh-lab-navbtn" onClick={() => onLab(prev.number)}>
-              <span>← Lab {prev.number}</span>{prev.title}
+              <span>← {labHeading(prev)}</span>{prev.title}
             </button>
           )}
           {next && (
             <button type="button" className="sh-lab-navbtn sh-lab-navbtn--next" onClick={() => onLab(next.number)}>
-              <span>Lab {next.number} →</span>{next.title}
+              <span>{labHeading(next)} →</span>{next.title}
             </button>
           )}
         </nav>

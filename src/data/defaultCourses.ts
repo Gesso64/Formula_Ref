@@ -7,6 +7,9 @@ import { AER318_SECTIONS } from './aer318Sections'
 import { AER320_SECTIONS } from './aer320Sections'
 import { MTH425_SECTIONS } from './mth425Sections'
 import { MTH425_LABS } from './mth425Labs'
+import { MTH425_PRACTICE_MIDTERM } from './mth425Practice'
+import { AER309_PRACTICE } from './aer309Practice'
+import { AER320_PRACTICE } from './aer320Practice'
 
 // Helper to make a card id deterministic
 let _cid = 0
@@ -1140,6 +1143,7 @@ export const DEFAULT_COURSES: Course[] = [
       { label: 'Midterm Sheet', file: 'aer309-midterm.pdf' },
       { label: 'Final Sheet', file: 'aer309-final.pdf' },
     ],
+    labs: AER309_PRACTICE,
   },
   // ─── AER316 ────────────────────────────────────────────────────────────────
   {
@@ -1191,9 +1195,11 @@ export const DEFAULT_COURSES: Course[] = [
     updatedAt: '2026-09-08T00:00:00Z',
     sections: AER320_SECTIONS,
     sheets: [
+      { label: 'Test 1 Sheet', file: 'aer320-test1.pdf' },
       { label: 'Midterm Sheet', file: 'aer320-midterm.pdf' },
       { label: 'Final Sheet', file: 'aer320-final.pdf' },
     ],
+    labs: AER320_PRACTICE,
   },
   // ─── MTH425 ────────────────────────────────────────────────────────────────
   {
@@ -1212,6 +1218,6 @@ export const DEFAULT_COURSES: Course[] = [
       { label: 'Midterm Sheet', file: 'mth425-midterm.pdf' },
       { label: 'Final Sheet', file: 'mth425-final.pdf' },
     ],
-    labs: MTH425_LABS,
+    labs: [...MTH425_LABS, MTH425_PRACTICE_MIDTERM],
   },
 ]

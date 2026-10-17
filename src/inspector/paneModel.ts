@@ -41,10 +41,17 @@ export const prefetchPdf = () => { void import('./pdf') }
 
 export const sheetUrl = (sheet: FormulaSheet) => `${import.meta.env.BASE_URL}formula-sheets/${sheet.file}`
 
-/** A practice lab's printable PDF, under public/labs/. */
-export const labPdfUrl = (lab: PracticeLab) => (lab.pdf ? `${import.meta.env.BASE_URL}labs/${lab.pdf}` : null)
+/** A practice set's printable PDF, a path under public/. */
+export const labPdfUrl = (lab: PracticeLab) => (lab.pdf ? `${import.meta.env.BASE_URL}${lab.pdf}` : null)
 
-/* ── URL hash: #<code>/<cardId> · #<code>/ex/<exampleId> · #<code>/sheet/<key> · #<code>/lab/<n> · #<code> ── */
+/** A practice set's display name ("Set 3", "Practice midterm") and its strip-chip badge. */
+export const labHeading = (lab: PracticeLab) => lab.heading ?? `Set ${lab.number}`
+export const labShort = (lab: PracticeLab) => lab.short ?? String(lab.number)
+
+/** A public/ asset path (practice figures) as a URL under the app's base. */
+export const assetUrl = (path: string) => `${import.meta.env.BASE_URL}${path.replace(/^\//, '')}`
+
+/* ── URL hash: #<code>/<cardId> · #<code>/ex/<exampleId> · #<code>/sheet/<key> · #<code>/set/<n> (old links: /lab/<n>) · #<code> ── */
 
 export function courseSlug(course: Course): string {
   return (course.code || course.id).toLowerCase().replace(/[^a-z0-9-]+/g, '-')
@@ -60,7 +67,7 @@ export function parseHash(hash: string, courses: Course[]): HashState | null {
   if (!course) return null
   const none = { course, sel: null, sheet: null, lab: null }
   if (a === 'sheet' && b) return { ...none, sheet: course.sheets?.find(s => sheetKey(s) === b) ?? null }
-  if (a === 'lab' && b) return { ...none, lab: course.labs?.find(l => String(l.number) === b)?.number ?? null }
+  if ((a === 'set' || a === 'lab') && b) return { ...none, lab: course.labs?.find(l => String(l.number) === b)?.number ?? null }
   if (a === 'ex' && b) return { ...none, sel: { kind: 'example', id: b } }
   if (a) return { ...none, sel: { kind: 'card', id: a } }
   return none
@@ -70,7 +77,7 @@ export function parseHash(hash: string, courses: Course[]): HashState | null {
 export function formatHash(course: Course, sel: Selection | null, sheet: FormulaSheet | null = null, lab: number | null = null): string {
   const slug = courseSlug(course)
   if (sheet) return `#${slug}/sheet/${sheetKey(sheet)}`
-  if (!sel) return lab != null ? `#${slug}/lab/${lab}` : `#${slug}`
+  if (!sel) return lab != null ? `#${slug}/set/${lab}` : `#${slug}`
   return sel.kind === 'example' ? `#${slug}/ex/${encodeURIComponent(sel.id)}` : `#${slug}/${encodeURIComponent(sel.id)}`
 }
 
@@ -178,20 +185,21 @@ export function buildIndex(courses: Course[]): SearchDoc[] {
       })
     }
     for (const lab of course.labs ?? []) {
-      const labMeta = normalise(`lab ${lab.number} practice ${lab.title} ${lab.ref} ${courseMeta}`)
+      const head = labHeading(lab)
+      const labMeta = normalise(`${head} practice ${lab.title} ${lab.ref} ${courseMeta}`)
       docs.push({
-        key: `lab:${lab.id}`, kind: 'lab', course, title: `Lab ${lab.number} · ${lab.title}`,
+        key: `lab:${lab.id}`, kind: 'lab', course, title: `${head} · ${lab.title}`,
         context: `Practice set · ${lab.problems.length} problems`, tag: lab.ref, preview: null, sel: null,
         lab: { number: lab.number, problemId: null },
-        t: normalise(`lab ${lab.number} ${lab.title}`), meta: labMeta, body: normalise(markdownText(`${lab.blurb} ${lab.intro}`)),
+        t: normalise(`${head} ${lab.title}`), meta: labMeta, body: normalise(markdownText(`${lab.blurb} ${lab.intro}`)),
       })
       for (const p of lab.problems) {
         const firstMath = p.statement.match(/\$\$?([^$]+)\$/)?.[1]
         docs.push({
-          key: `lab:${p.id}`, kind: 'lab', course, title: `Lab ${lab.number} ${p.label} · ${plainTex(p.method) || lab.title}`,
+          key: `lab:${p.id}`, kind: 'lab', course, title: `${head} ${p.label} · ${plainTex(p.method) || lab.title}`,
           context: lab.title, tag: lab.ref, preview: firstMath ? `\\textstyle ${firstMath}` : null, sel: null,
           lab: { number: lab.number, problemId: p.id },
-          t: normalise(`lab ${lab.number} ${p.label} ${p.method}`), meta: labMeta,
+          t: normalise(`${head} ${p.label} ${p.method}`), meta: labMeta,
           body: normalise(markdownText(`${p.statement} ${p.solution}`)),
         })
       }

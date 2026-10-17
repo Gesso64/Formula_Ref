@@ -202,8 +202,12 @@ body.sh-bodybg { background: #fbfbf9; }
   .sh-search--btn .sh-search-icon { position: static; }
   .sh-seg-long { display: none; }
 }
+@media (max-width: 1199px) {
+  .sh-bar { gap: 6px; }
+}
 @media (max-width: 899px) {
-  .sh-sheet-link svg { display: none; }
+  .sh-sheet-link svg, .sh-editbtn-label { display: none; }
+  .sh-editbtn { width: 32px; padding: 0; justify-content: center; }
 }
 
 /* Index strip */
@@ -543,6 +547,8 @@ body.sh-bodybg { background: #fbfbf9; }
 }
 .sh-prob-body { min-width: 0; }
 .sh-prob-q { font-size: calc(var(--sh-fs) + .5px); color: var(--sh-ink); }
+/* Practice figures are black-on-white SVGs; keep them on white so they read in dark mode too. */
+.sh-prob-fig { display: block; box-sizing: border-box; max-width: 100%; height: auto; margin: 8px 0 2px; padding: 6px; background: #fff; border: 1px solid var(--sh-rule); border-radius: 4px; }
 .sh-prob-q .katex { font-size: 1.12em; }
 .sh-prob-toggle {
   margin-top: 6px; padding: 3px 9px; border: 1px solid var(--sh-rule2); border-radius: 5px; background: transparent;
