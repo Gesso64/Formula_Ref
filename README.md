@@ -1,6 +1,6 @@
-# TMU Formula Reference
+# Kneeboard
 
-A mobile-friendly, editable formula reference sheet for TMU courses.
+A mobile-friendly, editable formula reference for aerospace engineering students: formula sheets, worked examples and practice problems.
 
 **Live site:** https://gesso64.github.io/Formula_Ref/
 

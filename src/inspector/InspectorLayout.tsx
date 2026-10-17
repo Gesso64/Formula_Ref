@@ -761,8 +761,8 @@ export default function InspectorLayout() {
         {/* ── Top bar ── */}
         <header className="sh-bar">
           {!mobile && (
-            <a className="sh-mark" href={import.meta.env.BASE_URL} aria-label="Formula Ref home">
-              <IconMark size={18} /><span>Formula Ref</span>
+            <a className="sh-mark" href={import.meta.env.BASE_URL} aria-label="Kneeboard home">
+              <IconMark size={18} /><span>Kneeboard</span>
             </a>
           )}
           {courseMenu}

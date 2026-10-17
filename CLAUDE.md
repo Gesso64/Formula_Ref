@@ -16,7 +16,7 @@ There are no tests. Deploying is done by pushing to `main` — GitHub Actions bu
 
 ## Architecture
 
-This is a React 19 + TypeScript + Vite SPA deployed to GitHub Pages at `/Formula_Ref/` (note the `base` in `vite.config.ts`). It is a mobile-first formula reference sheet for TMU engineering/math courses.
+This is a React 19 + TypeScript + Vite SPA deployed to GitHub Pages at `/Formula_Ref/` (note the `base` in `vite.config.ts`). It is Kneeboard, a mobile-first formula reference for aerospace engineering/math courses (deliberately not branded with any school name). Internal storage keys (`formula-ref` IndexedDB name, `formula-ref:` localStorage keys) keep the old name so existing saved data survives.
 
 ### Data model (`src/types/index.ts`)
 
