@@ -152,7 +152,7 @@ body.sh-bodybg { background: #fbfbf9; }
 .sh-course-btn:hover, .sh-course-btn.is-open { background: var(--sh-hover); }
 .sh-course-code {
   font-family: 'IBM Plex Sans Condensed', 'IBM Plex Sans', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: .02em;
-  color: var(--sh-ink); position: relative; padding-left: 12px;
+  color: var(--sh-ink); position: relative; padding-left: 12px; white-space: nowrap; flex-shrink: 0;
 }
 .sh-course-code::before {
   content: ''; position: absolute; left: 0; top: 50%; width: 6px; height: 6px; margin-top: -3px; border-radius: 1px;
@@ -190,6 +190,21 @@ body.sh-bodybg { background: #fbfbf9; }
 .sh-editbtn { border-color: transparent; color: var(--sh-ink2); }
 .sh-editbtn:hover { color: var(--sh-ink); }
 .sh-editbtn.is-on { background: var(--sh-ink); border-color: var(--sh-ink); color: var(--sh-paper); }
+
+/* Narrow desktop: the full bar doesn't fit, so drop the wordmark text, the course name and the
+   search placeholder rather than letting the course button shrink under the sheet links. */
+@media (max-width: 1099px) {
+  .sh-mark span, .sh-course-name { display: none; }
+  .sh-mark { padding-right: 10px; }
+  .sh-coursemenu, .sh-coursemenu .sh-course-btn { min-width: auto; flex-shrink: 0; }
+  .sh-search.sh-search--btn { width: 32px; min-width: 32px; padding: 0; justify-content: center; cursor: pointer; }
+  .sh-search--btn .sh-search-ph, .sh-search--btn .sh-kbd { display: none; }
+  .sh-search--btn .sh-search-icon { position: static; }
+  .sh-seg-long { display: none; }
+}
+@media (max-width: 899px) {
+  .sh-sheet-link svg { display: none; }
+}
 
 /* Index strip */
 .sh-strip { border-bottom: 1px solid var(--sh-rule2); }
@@ -479,8 +494,8 @@ body.sh-bodybg { background: #fbfbf9; }
 
 .sh-lab { max-width: 1480px; }
 .sh-band--lab .sh-band-num { color: var(--sh-band-ink); font-weight: 600; }
-.sh-lab-sub { display: flex; align-items: flex-start; gap: 10px 24px; padding: 9px 0 12px; border-bottom: 1px solid var(--sh-rule2); }
-.sh-lab-blurb { margin: 0; flex: 1; min-width: 0; max-width: 78ch; font-size: 13px; line-height: 1.5; color: var(--sh-ink2); }
+.sh-lab-sub { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 10px 24px; padding: 9px 0 12px; border-bottom: 1px solid var(--sh-rule2); }
+.sh-lab-blurb { margin: 0; flex: 1 1 32ch; min-width: 0; max-width: 78ch; font-size: 13px; line-height: 1.5; color: var(--sh-ink2); }
 .sh-lab-actions { display: flex; gap: 8px; flex-shrink: 0; }
 .sh-lab-actions a.sh-textbtn { text-decoration: none; }
 
@@ -489,12 +504,29 @@ body.sh-bodybg { background: #fbfbf9; }
   padding-top: 14px;
 }
 .sh-lab-intro {
-  position: sticky; top: calc(var(--sh-head-h, 92px) + 12px);
-  max-height: calc(100dvh - var(--sh-head-h, 92px) - 24px); overflow-y: auto; scrollbar-width: thin;
-  padding: 10px 14px 12px; background: var(--sh-shade); border-top: 2px solid var(--sh-band);
+  padding: 0 14px; background: var(--sh-shade); border-top: 2px solid var(--sh-band);
   print-color-adjust: exact; -webkit-print-color-adjust: exact;
 }
+.sh-lab-intro[open] {
+  position: sticky; top: calc(var(--sh-head-h, 92px) + 12px);
+  max-height: calc(100dvh - var(--sh-head-h, 92px) - 24px); overflow-y: auto; scrollbar-width: thin;
+  padding-bottom: 12px;
+}
+.sh-lab-intro-sum {
+  display: flex; align-items: center; gap: 7px; margin: 0; padding: 9px 0; cursor: pointer; list-style: none;
+  user-select: none;
+}
+.sh-lab-intro-sum::-webkit-details-marker { display: none; }
+.sh-lab-intro-sum::before {
+  content: ''; width: 6px; height: 6px; flex-shrink: 0; margin: 0 2px 2px 1px;
+  border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor;
+  transform: rotate(-45deg); transition: transform .15s;
+}
+.sh-lab-intro[open] > .sh-lab-intro-sum::before { transform: rotate(45deg); }
+.sh-lab-intro-sum:hover { color: var(--sh-acc-fg); }
 .sh-lab-intro .sh-md { color: var(--sh-shade-ink); }
+/* Closed, the dropdown is a full-width bar above the problems rather than a near-empty column. */
+.sh-lab-grid.is-collapsed { grid-template-columns: minmax(0, 1fr); row-gap: 14px; }
 .sh-lab-probs { min-width: 0; }
 
 .sh-prob {
@@ -548,9 +580,9 @@ body.sh-bodybg { background: #fbfbf9; }
 .sh-lab-intro .sh-md-table th { border-bottom-color: var(--sh-rule2); }
 .sh-lab-intro .sh-md-table td { border-bottom-color: color-mix(in srgb, var(--sh-rule2) 60%, transparent); }
 
-.sh-lab-nav { display: flex; justify-content: space-between; gap: 16px; margin-top: 28px; }
+.sh-lab-nav { display: flex; gap: 8px; margin-left: auto; }
 .sh-lab-navbtn {
-  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; max-width: 46%; padding: 9px 12px;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 1px; max-width: 17rem; padding: 6px 11px;
   border: 1px solid var(--sh-rule2); border-radius: 6px; background: transparent; cursor: pointer; text-align: left;
   font-size: 13.5px; font-weight: 500; transition: background-color .12s, border-color .12s;
 }
@@ -561,10 +593,10 @@ body.sh-bodybg { background: #fbfbf9; }
 /* One column for the labs when the space is tight (or the detail panel is docked beside it). */
 @media (max-width: 1099px) {
   .sh-lab-grid { grid-template-columns: minmax(0, 1fr); row-gap: 16px; }
-  .sh-lab-intro { position: static; max-height: none; }
+  .sh-lab-intro[open] { position: static; max-height: none; }
 }
 .sh-insp-docked .sh-lab-grid { grid-template-columns: minmax(0, 1fr); row-gap: 16px; }
-.sh-insp-docked .sh-lab-intro { position: static; max-height: none; }
+.sh-insp-docked .sh-lab-intro[open] { position: static; max-height: none; }
 
 /* ── Density: comfortable tweaks ─────────────────────────────────────── */
 
@@ -587,6 +619,24 @@ body.sh-bodybg { background: #fbfbf9; }
 .sh-is-mobile .sh-seg button { height: 30px; padding: 0 10px; }
 .sh-is-mobile .sh-strip-inner { height: 42px; padding: 0 6px; }
 .sh-is-mobile .sh-chip { font-size: 13.5px; }
+.sh-is-mobile .sh-bar:has(+ .sh-sheets) { border-bottom: 0; }
+.sh-is-mobile .sh-head > .sh-sheets {
+  display: flex; height: auto; margin: 0; padding: 0 8px 6px 10px; gap: 4px;
+  border-left: 0; border-bottom: 1px solid var(--sh-rule);
+}
+.sh-is-mobile .sh-head > .sh-sheets .sh-sheet-link { height: 32px; padding: 0 10px 0 8px; margin-top: -4px; }
+.sh-is-mobile .sh-head > .sh-sheets .sh-sheet-link svg { display: inline; }
+.sh-is-mobile .sh-bar > * { flex-shrink: 0; }
+.sh-is-mobile .sh-bar-spacer { min-width: 0; flex-shrink: 1; }
+@media (max-width: 399px) {
+  .sh-is-mobile .sh-bar { padding: 0 4px 0 6px; gap: 2px; }
+  .sh-is-mobile .sh-course-btn { gap: 5px; padding: 0 6px; }
+  .sh-is-mobile .sh-seg button { padding: 0 7px; font-size: 12.5px; }
+  .sh-is-mobile .sh-iconbtn { width: 36px; }
+}
+@media (max-width: 349px) {
+  .sh-is-mobile .sh-course-chev { display: none; }
+}
 .sh-is-mobile .sh-editbar { padding: 6px 10px 6px 14px; gap: 8px; }
 .sh-is-mobile .sh-editbar-hint { display: none; }
 
@@ -612,10 +662,12 @@ body.sh-bodybg { background: #fbfbf9; }
 .sh-is-mobile .sh-ex-answer { row-gap: 2px; margin-left: -16px; margin-right: -16px; padding-left: 16px; padding-right: 16px; }
 .sh-is-mobile .sh-table-qty { min-width: 9em; }
 .sh-is-mobile .sh-lab-sub { flex-direction: column; }
+.sh-is-mobile .sh-lab-blurb { flex: none; }
 .sh-is-mobile .sh-lab-intro { margin-left: -16px; margin-right: -16px; padding-left: 16px; padding-right: 16px; }
 .sh-is-mobile .sh-prob { grid-template-columns: minmax(0, 1fr); row-gap: 4px; }
 .sh-is-mobile .sh-prob-toggle { padding: 7px 12px; font-size: 13.5px !important; }
 .sh-is-mobile .sh-prob-sol { padding-left: 10px; }
+.sh-is-mobile .sh-lab-nav { width: 100%; margin-left: 0; }
 .sh-is-mobile .sh-lab-navbtn { max-width: 48%; }
 
 /* ── Motion ──────────────────────────────────────────────────────────── */
@@ -650,7 +702,7 @@ body.sh-bodybg { background: #fbfbf9; }
   .sh-entry, .sh-ex { content-visibility: visible; }
   .sh-lab-actions, .sh-prob-toggle, .sh-lab-nav { display: none !important; }
   .sh-lab-grid { grid-template-columns: minmax(0, 1fr); row-gap: 10px; }
-  .sh-lab-intro { position: static; max-height: none; overflow: visible; }
+  .sh-lab-intro[open] { position: static; max-height: none; overflow: visible; }
   .sh-prob { break-inside: avoid; }
   .sh-colophon { margin-top: 10px; }
   .sh-is-editing .sh-entry:hover { background: none; box-shadow: none; }

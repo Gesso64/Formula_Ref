@@ -33,7 +33,17 @@ const Problem = memo(function Problem({ p, open, flash, onToggle }: {
   )
 })
 
-/** A practice lab: header band, the key-methods recap, then its problems. */
+const METHODS_KEY = 'formula-ref:lab-methods-open'
+
+/** Whether the key-methods dropdown is open, kept across labs (each LabView remounts per lab). */
+function loadMethodsOpen(): boolean {
+  try { return localStorage.getItem(METHODS_KEY) === '1' } catch { return false }
+}
+function saveMethodsOpen(v: boolean) {
+  try { localStorage.setItem(METHODS_KEY, v ? '1' : '0') } catch { /* ignore */ }
+}
+
+/** A practice lab: header band, blurb with actions and prev/next nav, the key-methods dropdown, then its problems. */
 export function LabView({ lab, flash, prev, next, onLab, pdfUrl }: {
   lab: PracticeLab
   flash: string | null
@@ -49,6 +59,8 @@ export function LabView({ lab, flash, prev, next, onLab, pdfUrl }: {
     return n
   })
   const allOpen = lab.problems.every(p => open.has(p.id))
+  const [methodsOpen, setMethodsOpenState] = useState(loadMethodsOpen)
+  const setMethodsOpen = (v: boolean) => { setMethodsOpenState(v); saveMethodsOpen(v) }
 
   return (
     <div className="sh-lab">
@@ -71,13 +83,26 @@ export function LabView({ lab, flash, prev, next, onLab, pdfUrl }: {
             </a>
           )}
         </div>
+        <nav className="sh-lab-nav" aria-label="Other labs">
+          {prev && (
+            <button type="button" className="sh-lab-navbtn" onClick={() => onLab(prev.number)}>
+              <span>← Lab {prev.number}</span>{prev.title}
+            </button>
+          )}
+          {next && (
+            <button type="button" className="sh-lab-navbtn sh-lab-navbtn--next" onClick={() => onLab(next.number)}>
+              <span>Lab {next.number} →</span>{next.title}
+            </button>
+          )}
+        </nav>
       </div>
 
-      <div className="sh-lab-grid">
-        <aside className="sh-lab-intro" aria-label="Key methods">
-          <h3 className="sh-ex-label">Key methods</h3>
+      <div className={`sh-lab-grid${methodsOpen ? '' : ' is-collapsed'}`}>
+        <details className="sh-lab-intro" open={methodsOpen}
+          onToggle={e => setMethodsOpen(e.currentTarget.open)}>
+          <summary className="sh-ex-label sh-lab-intro-sum">Key methods</summary>
           <Md src={lab.intro} />
-        </aside>
+        </details>
         <div className="sh-lab-probs">
           {lab.problems.map(p => (
             <Problem key={p.id} p={p} open={open.has(p.id)} flash={flash === p.id} onToggle={toggle} />
@@ -85,18 +110,6 @@ export function LabView({ lab, flash, prev, next, onLab, pdfUrl }: {
         </div>
       </div>
 
-      <nav className="sh-lab-nav" aria-label="Other labs">
-        {prev ? (
-          <button type="button" className="sh-lab-navbtn" onClick={() => onLab(prev.number)}>
-            <span>← Lab {prev.number}</span>{prev.title}
-          </button>
-        ) : <span />}
-        {next && (
-          <button type="button" className="sh-lab-navbtn sh-lab-navbtn--next" onClick={() => onLab(next.number)}>
-            <span>Lab {next.number} →</span>{next.title}
-          </button>
-        )}
-      </nav>
     </div>
   )
 }

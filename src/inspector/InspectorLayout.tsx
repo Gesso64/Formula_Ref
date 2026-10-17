@@ -657,6 +657,20 @@ export default function InspectorLayout() {
 
   const sheetLinks = course?.sheets ?? []
 
+  const sheetNav = sheetLinks.length > 0 && (
+    <nav className="sh-sheets" aria-label="Formula sheets">
+      {sheetLinks.map(s => (
+        <a key={s.file} className="sh-sheet-link" target="_blank" rel="noopener noreferrer"
+          href={sheetUrl(s)} title={`View the ${s.label.toLowerCase()} (PDF)`}
+          onPointerEnter={prefetchPdf} onFocus={prefetchPdf}
+          onClick={e => { if (plainClick(e)) { e.preventDefault(); openSheet(s) } }}>
+          <IconFile size={14} />{s.label.replace(/\s*Sheet$/i, '')}
+          <span className="sh-visually-hidden"> sheet (PDF)</span>
+        </a>
+      ))}
+    </nav>
+  )
+
   const overflowMenu = (
     <Menu label="More" align="end" sheet={mobile}
       trigger={(p) => (
@@ -664,19 +678,6 @@ export default function InspectorLayout() {
       )}>
       {close => (
         <>
-          {mobile && sheetLinks.length > 0 && (
-            <>
-              <MenuHeading>Formula sheets</MenuHeading>
-              {sheetLinks.map(s => (
-                <a key={s.file} role="menuitem" className="sh-menu-item" target="_blank" rel="noopener noreferrer"
-                  href={sheetUrl(s)} onPointerEnter={prefetchPdf}
-                  onClick={e => { close(); if (plainClick(e)) { e.preventDefault(); openSheet(s) } }}>
-                  <IconFile size={14} /> {s.label}
-                </a>
-              ))}
-              <MenuSep />
-            </>
-          )}
           {mobile && (
             <>
               <MenuHeading>Density</MenuHeading>
@@ -692,6 +693,9 @@ export default function InspectorLayout() {
               <button type="button" role="menuitemcheckbox" aria-checked={editing} className="sh-menu-item"
                 onClick={() => { setEditing(e => !e); close() }}>
                 <IconPencil size={14} /> {editing ? 'Finish editing' : 'Edit mode'}
+              </button>
+              <button type="button" role="menuitem" className="sh-menu-item" onClick={() => { toggleTheme(); close() }}>
+                {theme === 'dark' ? <IconSun size={14} /> : <IconMoon size={14} />} {theme === 'dark' ? 'Light theme' : 'Dark theme'}
               </button>
               <MenuSep />
             </>
@@ -738,12 +742,12 @@ export default function InspectorLayout() {
       <button type="button" aria-pressed={effMode === 'formulas'} onClick={() => switchMode('formulas')}>Formulas</button>
       {hasExamples && (
         <button type="button" aria-pressed={effMode === 'examples'} onClick={() => switchMode('examples')}>
-          {mobile ? 'Examples' : 'Worked Examples'}
+          <span>{!mobile && <span className="sh-seg-long">Worked </span>}Examples</span>
         </button>
       )}
       {hasLabs && (
         <button type="button" aria-pressed={effMode === 'labs'} onClick={() => switchMode('labs')}>
-          {mobile ? 'Labs' : 'Practice Labs'}
+          <span>{!mobile && <span className="sh-seg-long">Practice </span>}Labs</span>
         </button>
       )}
     </div>
@@ -762,19 +766,7 @@ export default function InspectorLayout() {
             </a>
           )}
           {courseMenu}
-          {!mobile && sheetLinks.length > 0 && (
-            <nav className="sh-sheets" aria-label="Formula sheets">
-              {sheetLinks.map(s => (
-                <a key={s.file} className="sh-sheet-link" target="_blank" rel="noopener noreferrer"
-                  href={sheetUrl(s)} title={`View the ${s.label.toLowerCase()} (PDF)`}
-                  onPointerEnter={prefetchPdf} onFocus={prefetchPdf}
-                  onClick={e => { if (plainClick(e)) { e.preventDefault(); openSheet(s) } }}>
-                  <IconFile size={14} />{s.label.replace(/\s*Sheet$/i, '')}
-                  <span className="sh-visually-hidden"> sheet (PDF)</span>
-                </a>
-              ))}
-            </nav>
-          )}
+          {!mobile && sheetNav}
           <div className="sh-bar-spacer" />
           {modeSwitch}
           {paletteTrigger}
@@ -792,12 +784,16 @@ export default function InspectorLayout() {
               <IconPencil size={14} />{editing ? 'Done' : 'Edit'}
             </button>
           )}
-          <button type="button" className="sh-iconbtn" onClick={toggleTheme}
-            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'} title="Toggle light/dark theme">
-            {theme === 'dark' ? <IconSun size={16} /> : <IconMoon size={16} />}
-          </button>
+          {!mobile && (
+            <button type="button" className="sh-iconbtn" onClick={toggleTheme}
+              aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'} title="Toggle light/dark theme">
+              {theme === 'dark' ? <IconSun size={16} /> : <IconMoon size={16} />}
+            </button>
+          )}
           {overflowMenu}
         </header>
+        {/* Mobile: the sheet links get their own row under the course button */}
+        {mobile && sheetNav}
 
         {/* ── Section index strip ── */}
         {course && (
