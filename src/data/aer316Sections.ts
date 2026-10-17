@@ -618,12 +618,12 @@ export const AER316_SECTIONS: Section[] = [
         tagColor: '#A21CAF',
         title: 'Boundary layer thickness definitions',
         subs: [
-          { latex: '\\delta: \\quad u(\\delta) = 0.99\\,U \\quad \\text{(99% thickness)}' },
-          { latex: '\\delta^{*} = \\int_0^{\\infty}\\left(1-\\dfrac{u}{U}\\right) dy \\quad \\text{(displacement thickness)}' },
-          { latex: '\\theta = \\int_0^{\\infty} \\dfrac{u}{U}\\left(1-\\dfrac{u}{U}\\right) dy \\quad \\text{(momentum thickness)}' },
+          { latex: 'u(\\delta) = 0.99\\,U' },
+          { latex: '\\delta^{*} = \\int_0^{\\infty}\\left(1-\\dfrac{u}{U}\\right) dy' },
+          { latex: '\\theta = \\int_0^{\\infty} \\dfrac{u}{U}\\left(1-\\dfrac{u}{U}\\right) dy' },
         ],
         notes:
-          '<strong>U</strong> = free-stream velocity. δ* is the mass-flow deficit thickness; θ is the momentum-flux deficit thickness — both used in integral boundary-layer analysis.',
+          '<strong>δ</strong> = 99% thickness, <strong>δ*</strong> = displacement thickness, <strong>θ</strong> = momentum thickness; <strong>U</strong> = free-stream velocity. δ* is the mass-flow deficit thickness; θ is the momentum-flux deficit thickness — both used in integral boundary-layer analysis.',
       },
       {
         id: 'aer316-card-blasius-solution',
