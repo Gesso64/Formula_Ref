@@ -10,10 +10,11 @@ import {
   type Density, type Mode, type FlowSection, type Page, type Heights,
   splitLabel, shortLabel, sortedCards, paginate, pagesKey, loadDensity, saveDensity,
 } from './model'
-import { buildIndex, flattenCourse, formatHash, parseHash, prefetchPdf, sheetUrl, type SearchDoc, type Selection } from './paneModel'
+import { buildIndex, flattenCourse, formatHash, labPdfUrl, parseHash, prefetchPdf, sheetUrl, type SearchDoc, type Selection } from './paneModel'
 import { SheetViewer } from './SheetViewer'
 import { Entry } from './Entry'
 import { ExampleBlock } from './Examples'
+import { LabView } from './Labs'
 import { DetailPane } from './DetailPane'
 import { Palette } from './Palette'
 import { Menu, MenuHeading, MenuSep } from './Menu'
@@ -150,13 +151,13 @@ function measureHeights(root: HTMLElement, cache: Map<string, number>): Heights 
 
 interface VisibleSection { section: Section; num: number; cards: Card[]; wide: boolean }
 
-/** The course and (if they still exist) the entry or formula sheet a URL hash points at. */
-function readHash(courses: Course[]): { courseId: string; sel: Selection | null; sheet: FormulaSheet | null } | null {
+/** The course and (if they still exist) the entry, formula sheet or practice lab a URL hash points at. */
+function readHash(courses: Course[]): { courseId: string; sel: Selection | null; sheet: FormulaSheet | null; lab: number | null } | null {
   const parsed = parseHash(window.location.hash, courses)
   if (!parsed) return null
-  const { course, sel, sheet } = parsed
+  const { course, sel, sheet, lab } = parsed
   const found = !!sel && flattenCourse(course).some(i => i.kind === sel.kind && i.id === sel.id)
-  return { courseId: course.id, sel: found ? sel : null, sheet }
+  return { courseId: course.id, sel: found ? sel : null, sheet, lab }
 }
 
 /** A plain click opens the sheet in the site; modified clicks keep the link's own behaviour (new tab etc.). */
@@ -174,7 +175,6 @@ export default function InspectorLayout() {
 
   const [density, setDensity] = useState<Density>(loadDensity)
   const [editing, setEditing] = useState(false)
-  const [mode, setMode] = useState<Mode>('formulas')
   const [jump, setJump] = useState<string | null>(null)
   const [flash, setFlash] = useState<string | null>(null)
   const [inView, setInView] = useState<string[]>([])
@@ -183,6 +183,8 @@ export default function InspectorLayout() {
   const [editCourse, setEditCourse] = useState<{ course?: Course } | null>(null)
   // A deep link (#aer309/<cardId>) wins over the persisted active course on first render.
   const [linked] = useState(() => readHash(courses))
+  const [mode, setMode] = useState<Mode>(linked?.lab != null ? 'labs' : 'formulas')
+  const [labNum, setLabNum] = useState<number | null>(linked?.lab ?? null)   // the practice lab shown in the Labs view
   const [insp, setInsp] = useState<{ courseId: string; sel: Selection | null } | null>(
     linked?.sel ? { courseId: linked.courseId, sel: linked.sel } : null)
   // The formula sheet PDF being viewed (SheetViewer), if any.
@@ -194,7 +196,7 @@ export default function InspectorLayout() {
   const headRef = useRef<HTMLDivElement>(null)
   const stripRef = useRef<HTMLDivElement>(null)
   const fileRef = useRef<HTMLInputElement>(null)
-  const savedScroll = useRef<Record<Mode, number>>({ formulas: 0, examples: 0 })
+  const savedScroll = useRef<Record<Mode, number>>({ formulas: 0, examples: 0, labs: 0 })
   const flashTimer = useRef(0)
   const [sheetRef, sheetW] = useElementWidth<HTMLDivElement>()
 
@@ -214,7 +216,11 @@ export default function InspectorLayout() {
   const course = activeCourse
   const editorOpen = !!(editCard || editSection || editCourse)
   const hasExamples = (course?.examples?.length ?? 0) > 0
-  const effMode: Mode = hasExamples ? mode : 'formulas'
+  const labs = useMemo(() => [...(course?.labs ?? [])].sort((a, b) => a.number - b.number), [course])
+  const hasLabs = labs.length > 0
+  const effMode: Mode = mode === 'examples' && hasExamples ? 'examples' : mode === 'labs' && hasLabs ? 'labs' : 'formulas'
+  const labIdx = Math.max(0, labs.findIndex(l => l.number === labNum))
+  const lab = labs[labIdx] ?? null
   const sections = useMemo(() => (course ? [...course.sections].sort((a, b) => a.order - b.order) : []), [course])
 
   const visible: VisibleSection[] = useMemo(() => sections.map((section, i) => {
@@ -314,18 +320,26 @@ export default function InspectorLayout() {
     }
   }, [effMode, pages, examples])
 
-  /* Keep the first in-view chip visible in the index strip. */
+  /* Keep the first in-view chip (or the open lab's) visible in the index strip. */
+  const chipId = effMode === 'labs' ? lab?.id : inView[0]
   useEffect(() => {
     const strip = stripRef.current
-    if (!strip || !inView.length) return
-    const chip = strip.querySelector<HTMLElement>(`[data-chip="${CSS.escape(inView[0])}"]`)
-    if (!chip) return
-    const l = chip.offsetLeft
-    const r = l + chip.offsetWidth
-    if (l < strip.scrollLeft + 8 || r > strip.scrollLeft + strip.clientWidth - 8) {
-      strip.scrollTo({ left: Math.max(0, l - 16), behavior: prefersReducedMotion() ? 'auto' : 'smooth' })
+    if (!strip || !chipId) return
+    let cancelled = false
+    const reveal = () => {
+      const chip = strip.querySelector<HTMLElement>(`[data-chip="${CSS.escape(chipId)}"]`)
+      if (cancelled || !chip) return
+      const l = chip.offsetLeft
+      const r = l + chip.offsetWidth
+      if (l < strip.scrollLeft + 8 || r > strip.scrollLeft + strip.clientWidth - 8) {
+        strip.scrollTo({ left: Math.max(0, l - 16), behavior: prefersReducedMotion() ? 'auto' : 'smooth' })
+      }
     }
-  }, [inView])
+    // Chip widths depend on the web font, so measure once it has loaded (a deep link lands here first).
+    if (!document.fonts || document.fonts.status === 'loaded') reveal()
+    else void document.fonts.ready.then(reveal)
+    return () => { cancelled = true }
+  }, [chipId, mobile])
 
   const flashEl = useCallback((id: string) => {
     setFlash(id)
@@ -355,11 +369,11 @@ export default function InspectorLayout() {
     if (el) { scrollToEl(el); flashEl(id) }
   }
 
-  /* Example link from an entry: switch view, then scroll once it has rendered. */
+  /* Example link from an entry (or a lab problem from search): switch view, then scroll once it has rendered. */
   useEffect(() => {
-    if (!jump || effMode !== 'examples') return
+    if (!jump || effMode === 'formulas') return
     const raf = requestAnimationFrame(() => {
-      const el = document.getElementById(`sh-ex-${jump}`)
+      const el = document.getElementById(effMode === 'examples' ? `sh-ex-${jump}` : `sh-prob-${jump}`)
       if (el) {
         const headH = headRef.current?.offsetHeight ?? 0
         window.scrollTo({ top: Math.max(0, el.getBoundingClientRect().top + window.scrollY - headH - 10) })
@@ -393,10 +407,20 @@ export default function InspectorLayout() {
     setJump(id)
   }, [])
 
+  /** Show practice lab `n` (and scroll to one of its problems, if given). */
+  const openLab = (n: number, problemId: string | null = null) => {
+    if (effMode !== 'labs') savedScroll.current[effMode] = window.scrollY
+    setMode('labs')
+    setLabNum(n)
+    if (problemId) setJump(problemId)
+    else window.scrollTo({ top: 0 })
+  }
+
   const switchCourse = (id: string) => {
     setMode('formulas')
+    setLabNum(null)
     setInView([])
-    savedScroll.current = { formulas: 0, examples: 0 }
+    savedScroll.current = { formulas: 0, examples: 0, labs: 0 }
     setActiveCourseId(id)
     window.scrollTo({ top: 0 })
   }
@@ -471,7 +495,7 @@ export default function InspectorLayout() {
     if (r.top < headH || r.bottom > window.innerHeight) scrollToEl(el)
   }, [inspSel, effMode, headH, scrollToEl, pages])
 
-  /* ── URL hash ↔ course + selected entry: #<code> · #<code>/<cardId> · #<code>/ex/<exampleId> ── */
+  /* ── URL hash ↔ course + selected entry: #<code> · #<code>/<cardId> · #<code>/ex/<exampleId> · #<code>/lab/<n> ── */
 
   const pendingCourse = useRef<string | null>(linked?.courseId ?? null)   // held until that course is active
   const applyHash = useEffectEvent(() => {
@@ -479,11 +503,15 @@ export default function InspectorLayout() {
     const next = readHash(courses)
     if (!next) { setInsp(null); return }
     if (next.courseId !== course?.id) { pendingCourse.current = next.courseId; switchCourse(next.courseId) }
+    if (next.lab != null) { setMode('labs'); setLabNum(next.lab) }
     setInsp(next.sel ? { courseId: next.courseId, sel: next.sel } : null)
     setSheetOpen(next.sheet ? { courseId: next.courseId, sheet: next.sheet } : null)
   })
   const enterLinkedCourse = useEffectEvent(() => {
-    if (pendingCourse.current && pendingCourse.current !== course?.id) switchCourse(pendingCourse.current)
+    if (pendingCourse.current && pendingCourse.current !== course?.id) {
+      switchCourse(pendingCourse.current)
+      if (linked?.lab != null) { setMode('labs'); setLabNum(linked.lab) }
+    }
   })
 
   useEffect(() => {
@@ -506,16 +534,17 @@ export default function InspectorLayout() {
       pendingCourse.current = null
     }
     const base = window.location.pathname + window.location.search
-    const hash = formatHash(course, inspSel, viewing)
+    const labShown = effMode === 'labs' && lab ? lab.number : null
+    const hash = formatHash(course, inspSel, viewing, labShown)
     const overlay = !!inspSel || !!viewing
     if (window.location.hash === hash) return
     if (overlay && !window.history.state?.shInsp) {
-      window.history.replaceState(null, '', base + formatHash(course, null))
+      window.history.replaceState(null, '', base + formatHash(course, null, null, labShown))
       window.history.pushState({ shInsp: true }, '', base + hash)
     } else {
       window.history.replaceState(overlay ? window.history.state : null, '', base + hash)
     }
-  }, [course, inspSel, viewing])
+  }, [course, inspSel, viewing, effMode, lab])
 
   const searchIndex = useMemo(() => buildIndex(courses), [courses])
 
@@ -526,6 +555,8 @@ export default function InspectorLayout() {
     if (doc.kind === 'section' && doc.sectionId) {
       const id = doc.sectionId
       window.setTimeout(() => jumpToSection(id), 120)
+    } else if (doc.lab) {
+      openLab(doc.lab.number, doc.lab.problemId)
     } else if (doc.sel) {
       setInsp({ courseId: doc.course.id, sel: doc.sel })
     }
@@ -702,12 +733,19 @@ export default function InspectorLayout() {
     </button>
   )
 
-  const modeSwitch = hasExamples && (
+  const modeSwitch = (hasExamples || hasLabs) && (
     <div className="sh-seg" role="group" aria-label="View">
       <button type="button" aria-pressed={effMode === 'formulas'} onClick={() => switchMode('formulas')}>Formulas</button>
-      <button type="button" aria-pressed={effMode === 'examples'} onClick={() => switchMode('examples')}>
-        {mobile ? 'Examples' : 'Worked Examples'}
-      </button>
+      {hasExamples && (
+        <button type="button" aria-pressed={effMode === 'examples'} onClick={() => switchMode('examples')}>
+          {mobile ? 'Examples' : 'Worked Examples'}
+        </button>
+      )}
+      {hasLabs && (
+        <button type="button" aria-pressed={effMode === 'labs'} onClick={() => switchMode('labs')}>
+          {mobile ? 'Labs' : 'Practice Labs'}
+        </button>
+      )}
     </div>
   )
 
@@ -763,7 +801,7 @@ export default function InspectorLayout() {
 
         {/* ── Section index strip ── */}
         {course && (
-          <nav className="sh-strip" aria-label={effMode === 'formulas' ? 'Sections' : 'Worked examples'}>
+          <nav className="sh-strip" aria-label={effMode === 'formulas' ? 'Sections' : effMode === 'labs' ? 'Practice labs' : 'Worked examples'}>
             <div className="sh-strip-inner" ref={stripRef}>
               {effMode === 'formulas'
                 ? visible.map(v => {
@@ -777,6 +815,15 @@ export default function InspectorLayout() {
                       </button>
                     )
                   })
+                : effMode === 'labs'
+                ? labs.map(l => (
+                    <button key={l.id} type="button" data-chip={l.id} title={`Lab ${l.number} · ${l.title}`}
+                      className={`sh-chip sh-chip--q${l === lab ? ' is-active' : ''}`} aria-current={l === lab ? 'page' : undefined}
+                      onClick={() => openLab(l.number)}>
+                      <span className="sh-chip-num">{l.number}</span>
+                      <span className="sh-chip-qt">{l.title}</span>
+                    </button>
+                  ))
                 : examples.map(ex => (
                     <button key={ex.id} type="button" data-chip={ex.id} title={ex.title}
                       className={`sh-chip sh-chip--q${inView.includes(ex.id) ? ' is-active' : ''}`}
@@ -819,12 +866,14 @@ export default function InspectorLayout() {
               <div className="sh-tb-row">
                 <span className="sh-tb-code">{course.code}</span>
                 <h1 className="sh-tb-name">{course.name}</h1>
-                <span className="sh-tb-kind">{effMode === 'formulas' ? 'Formula sheet' : 'Worked examples'}</span>
+                <span className="sh-tb-kind">{effMode === 'formulas' ? 'Formula sheet' : effMode === 'labs' ? 'Practice labs' : 'Worked examples'}</span>
               </div>
               <div className="sh-tb-meta">
                 {course.description && <span>{course.description}</span>}
                 {effMode === 'formulas'
                   ? <span>{sections.length} sections · {totalCount} entries</span>
+                  : effMode === 'labs'
+                  ? <span>{labs.length} practice sets · {labs.reduce((n, l) => n + l.problems.length, 0)} problems</span>
                   : <span>{course.examples!.length} problems{course.examples![0]?.source ? ` · ${course.examples![0].source}` : ''}</span>}
                 {course.term && <span className="sh-tb-term">{course.term}</span>}
               </div>
@@ -880,6 +929,9 @@ export default function InspectorLayout() {
                   </button>
                 )}
               </>
+            ) : effMode === 'labs' && lab ? (
+              <LabView key={lab.id} lab={lab} flash={flash} prev={labs[labIdx - 1] ?? null} next={labs[labIdx + 1] ?? null}
+                onLab={n => openLab(n)} pdfUrl={labPdfUrl(lab)} />
             ) : (
               <div className="sh-examples">
                 {examples.map(ex => <ExampleBlock key={ex.id} ex={ex} flash={flash === ex.id} />)}
@@ -887,7 +939,7 @@ export default function InspectorLayout() {
             )}
 
             <footer className="sh-colophon">
-              {course.code} · {course.name} — {effMode === 'formulas' ? 'formula sheet' : 'worked examples'}
+              {course.code} · {course.name} — {effMode === 'formulas' ? 'formula sheet' : effMode === 'labs' ? 'practice labs' : 'worked examples'}
             </footer>
           </>
         )}

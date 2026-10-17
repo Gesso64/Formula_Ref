@@ -58,6 +58,7 @@ export interface Course {
   createdAt: string;
   updatedAt: string;
   examples?: WorkedExample[];
+  labs?: PracticeLab[];  // practice problem sets, shown in the "Labs" view (MTH425)
 }
 
 export interface AppMeta {
@@ -81,4 +82,24 @@ export interface WorkedExample {
   answer: string;
   interpretation?: string;
   diagram?: string;  // registry key for optional SVG diagram
+}
+
+/* Practice labs: text fields are Markdown with $…$ / $$…$$ math (see src/lib/markdown.ts). */
+export interface PracticeProblem {
+  id: string;
+  label: string;      // "P1" … "P8", or "B(a)" for Lab 4's set-up questions
+  method: string;     // the solution's one-line approach (kept behind the reveal)
+  statement: string;
+  solution: string;
+}
+
+export interface PracticeLab {
+  id: string;
+  number: number;
+  title: string;
+  ref: string;        // textbook sections, e.g. "§2.2, 2.3"
+  blurb: string;      // what the set covers
+  intro: string;      // key-methods recap shown above the problems
+  pdf?: string;       // printable version under public/labs/
+  problems: PracticeProblem[];
 }

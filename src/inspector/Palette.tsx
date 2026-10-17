@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { search, type ResultKind, type SearchDoc } from './paneModel'
 import { Tex } from './Tex'
-import { BookIcon, CloseIcon, CourseIcon, EnterIcon, FunctionIcon, LayersIcon, SearchIcon } from './paneIcons'
+import { BookIcon, CloseIcon, CourseIcon, EnterIcon, FunctionIcon, LayersIcon, PracticeIcon, SearchIcon } from './paneIcons'
 
 interface Props {
   index: SearchDoc[]
@@ -14,10 +14,11 @@ interface Props {
 const KIND_ICON: Record<ResultKind, ReactNode> = {
   card: <FunctionIcon size={15} />,
   example: <BookIcon size={15} />,
+  lab: <PracticeIcon size={15} />,
   section: <LayersIcon size={15} />,
   course: <CourseIcon size={15} />,
 }
-const KIND_LABEL: Record<ResultKind, string> = { card: 'Formula', example: 'Worked example', section: 'Section', course: 'Course' }
+const KIND_LABEL: Record<ResultKind, string> = { card: 'Formula', example: 'Worked example', lab: 'Practice lab', section: 'Section', course: 'Course' }
 
 function highlight(text: string, query: string): ReactNode {
   const terms = query.trim().split(/\s+/).filter(t => t.length > 0).map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))

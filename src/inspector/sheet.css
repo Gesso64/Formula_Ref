@@ -475,6 +475,97 @@ body.sh-bodybg { background: #fbfbf9; }
 .sh-ex-answer-text { font-weight: 600; font-size: 14px; color: var(--sh-shade-ink); }
 .sh-ex-answer .sh-note { font-style: italic; margin-top: 4px; }
 
+/* ── Practice labs ───────────────────────────────────────────────────── */
+
+.sh-lab { max-width: 1480px; }
+.sh-band--lab .sh-band-num { color: var(--sh-band-ink); font-weight: 600; }
+.sh-lab-sub { display: flex; align-items: flex-start; gap: 10px 24px; padding: 9px 0 12px; border-bottom: 1px solid var(--sh-rule2); }
+.sh-lab-blurb { margin: 0; flex: 1; min-width: 0; max-width: 78ch; font-size: 13px; line-height: 1.5; color: var(--sh-ink2); }
+.sh-lab-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.sh-lab-actions a.sh-textbtn { text-decoration: none; }
+
+.sh-lab-grid {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); column-gap: var(--sh-gap); align-items: start;
+  padding-top: 14px;
+}
+.sh-lab-intro {
+  position: sticky; top: calc(var(--sh-head-h, 92px) + 12px);
+  max-height: calc(100dvh - var(--sh-head-h, 92px) - 24px); overflow-y: auto; scrollbar-width: thin;
+  padding: 10px 14px 12px; background: var(--sh-shade); border-top: 2px solid var(--sh-band);
+  print-color-adjust: exact; -webkit-print-color-adjust: exact;
+}
+.sh-lab-intro .sh-md { color: var(--sh-shade-ink); }
+.sh-lab-probs { min-width: 0; }
+
+.sh-prob {
+  display: grid; grid-template-columns: 3.2rem minmax(0, 1fr); column-gap: 12px;
+  padding: 11px 0 12px; border-bottom: 1px solid var(--sh-rule);
+  scroll-margin-top: calc(var(--sh-head-h, 92px) + 12px);
+  transition: box-shadow .2s;
+}
+.sh-prob:first-child { padding-top: 2px; }
+.sh-prob.sh-flash { box-shadow: -8px 0 0 var(--sh-acc-bg), 8px 0 0 var(--sh-acc-bg); background: var(--sh-acc-bg); }
+.sh-prob-label {
+  font-family: 'IBM Plex Sans Condensed', 'IBM Plex Sans', sans-serif; font-weight: 700; font-size: 15px;
+  color: var(--sh-acc-fg); padding-top: 1px; font-variant-numeric: tabular-nums;
+}
+.sh-prob-body { min-width: 0; }
+.sh-prob-q { font-size: calc(var(--sh-fs) + .5px); color: var(--sh-ink); }
+.sh-prob-q .katex { font-size: 1.12em; }
+.sh-prob-toggle {
+  margin-top: 6px; padding: 3px 9px; border: 1px solid var(--sh-rule2); border-radius: 5px; background: transparent;
+  font-size: 12.5px !important; font-weight: 500; color: var(--sh-acc-fg) !important; cursor: pointer;
+  transition: background-color .12s, border-color .12s;
+}
+.sh-prob-toggle:hover, .sh-prob.is-open .sh-prob-toggle { background: var(--sh-acc-bg); border-color: var(--sh-acc); }
+.sh-prob-sol { margin-top: 10px; padding: 2px 0 0 14px; border-left: 2px solid var(--sh-acc); }
+.sh-prob-method {
+  margin-bottom: 4px; font-family: 'IBM Plex Sans Condensed', 'IBM Plex Sans', sans-serif;
+  font-size: 13.5px; font-weight: 600; color: var(--sh-ink);
+}
+.sh-prob-method::first-letter { text-transform: uppercase; }
+
+/* Markdown text (lab intro, statements, solutions) */
+.sh-md { font-size: var(--sh-fs); line-height: 1.55; color: var(--sh-ink2); overflow-wrap: break-word; }
+.sh-md > * { margin: 0; }
+.sh-md > * + * { margin-top: 7px; }
+.sh-md strong { color: var(--sh-ink); font-weight: 600; }
+.sh-md code { font-family: 'IBM Plex Mono', monospace; font-size: .9em; }
+.sh-md ul, .sh-md ol { padding-left: 1.4em; }
+.sh-md li + li { margin-top: 3px; }
+.sh-md-math { overflow-x: auto; overflow-y: hidden; padding: 2px 0; scrollbar-width: thin; color: var(--sh-ink); }
+.sh-root .sh-md-math .katex-display { margin: 0; text-align: left; }
+.sh-root .sh-md-math .katex-display > .katex { text-align: left; }
+.sh-md .katex { color: var(--sh-ink); }
+.sh-md-table { overflow-x: auto; }
+.sh-md-table table { border-collapse: collapse; font-size: 13px; line-height: 1.4; }
+.sh-md-table th {
+  text-align: left; font-weight: 500; font-size: 12px; color: var(--sh-ink3);
+  padding: 0 12px 3px 0; border-bottom: 1px solid var(--sh-rule2);
+}
+.sh-md-table td { padding: 4px 12px 4px 0; border-bottom: 1px solid var(--sh-rule); vertical-align: middle; color: var(--sh-ink); }
+.sh-md-table tr:last-child td { border-bottom: 0; }
+.sh-lab-intro .sh-md-table th { border-bottom-color: var(--sh-rule2); }
+.sh-lab-intro .sh-md-table td { border-bottom-color: color-mix(in srgb, var(--sh-rule2) 60%, transparent); }
+
+.sh-lab-nav { display: flex; justify-content: space-between; gap: 16px; margin-top: 28px; }
+.sh-lab-navbtn {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px; max-width: 46%; padding: 9px 12px;
+  border: 1px solid var(--sh-rule2); border-radius: 6px; background: transparent; cursor: pointer; text-align: left;
+  font-size: 13.5px; font-weight: 500; transition: background-color .12s, border-color .12s;
+}
+.sh-lab-navbtn span { font-size: 12px; color: var(--sh-ink3); font-weight: 400; }
+.sh-lab-navbtn--next { align-items: flex-end; text-align: right; margin-left: auto; }
+.sh-lab-navbtn:hover { background: var(--sh-hover); border-color: var(--sh-acc); }
+
+/* One column for the labs when the space is tight (or the detail panel is docked beside it). */
+@media (max-width: 1099px) {
+  .sh-lab-grid { grid-template-columns: minmax(0, 1fr); row-gap: 16px; }
+  .sh-lab-intro { position: static; max-height: none; }
+}
+.sh-insp-docked .sh-lab-grid { grid-template-columns: minmax(0, 1fr); row-gap: 16px; }
+.sh-insp-docked .sh-lab-intro { position: static; max-height: none; }
+
 /* ── Density: comfortable tweaks ─────────────────────────────────────── */
 
 .sh-comfortable .sh-name { font-size: 14.5px; }
@@ -520,6 +611,12 @@ body.sh-bodybg { background: #fbfbf9; }
 .sh-is-mobile .sh-ex-steps { border-left: 0; padding-left: 0; border-top: 1px solid var(--sh-rule); padding-top: 8px; }
 .sh-is-mobile .sh-ex-answer { row-gap: 2px; margin-left: -16px; margin-right: -16px; padding-left: 16px; padding-right: 16px; }
 .sh-is-mobile .sh-table-qty { min-width: 9em; }
+.sh-is-mobile .sh-lab-sub { flex-direction: column; }
+.sh-is-mobile .sh-lab-intro { margin-left: -16px; margin-right: -16px; padding-left: 16px; padding-right: 16px; }
+.sh-is-mobile .sh-prob { grid-template-columns: minmax(0, 1fr); row-gap: 4px; }
+.sh-is-mobile .sh-prob-toggle { padding: 7px 12px; font-size: 13.5px !important; }
+.sh-is-mobile .sh-prob-sol { padding-left: 10px; }
+.sh-is-mobile .sh-lab-navbtn { max-width: 48%; }
 
 /* ── Motion ──────────────────────────────────────────────────────────── */
 
@@ -551,6 +648,10 @@ body.sh-bodybg { background: #fbfbf9; }
   .sh-band-title { font-size: 10.5pt; }
   .sh-ex { break-inside: avoid; }
   .sh-entry, .sh-ex { content-visibility: visible; }
+  .sh-lab-actions, .sh-prob-toggle, .sh-lab-nav { display: none !important; }
+  .sh-lab-grid { grid-template-columns: minmax(0, 1fr); row-gap: 10px; }
+  .sh-lab-intro { position: static; max-height: none; overflow: visible; }
+  .sh-prob { break-inside: avoid; }
   .sh-colophon { margin-top: 10px; }
   .sh-is-editing .sh-entry:hover { background: none; box-shadow: none; }
 }

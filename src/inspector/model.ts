@@ -1,7 +1,7 @@
 import type { Card, Section } from '@/types'
 
 export type Density = 'compact' | 'comfortable'
-export type Mode = 'formulas' | 'examples'
+export type Mode = 'formulas' | 'examples' | 'labs'
 
 /* ── Labels ─────────────────────────────────────────────────────────────── */
 

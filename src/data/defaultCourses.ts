@@ -6,6 +6,7 @@ import { AER316_SECTIONS } from './aer316Sections'
 import { AER318_SECTIONS } from './aer318Sections'
 import { AER320_SECTIONS } from './aer320Sections'
 import { MTH425_SECTIONS } from './mth425Sections'
+import { MTH425_LABS } from './mth425Labs'
 
 // Helper to make a card id deterministic
 let _cid = 0
@@ -1211,5 +1212,6 @@ export const DEFAULT_COURSES: Course[] = [
       { label: 'Midterm Sheet', file: 'mth425-midterm.pdf' },
       { label: 'Final Sheet', file: 'mth425-final.pdf' },
     ],
+    labs: MTH425_LABS,
   },
 ]

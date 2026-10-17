@@ -1,4 +1,5 @@
-import type { Card, Course, FormulaSheet, Section, WorkedExample } from '@/types'
+import type { Card, Course, FormulaSheet, PracticeLab, Section, WorkedExample } from '@/types'
+import { markdownText } from '@/lib/markdown'
 
 export const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent)
 
@@ -40,13 +41,16 @@ export const prefetchPdf = () => { void import('./pdf') }
 
 export const sheetUrl = (sheet: FormulaSheet) => `${import.meta.env.BASE_URL}formula-sheets/${sheet.file}`
 
-/* ── URL hash: #<code>/<cardId> · #<code>/ex/<exampleId> · #<code>/sheet/<key> · #<code> ── */
+/** A practice lab's printable PDF, under public/labs/. */
+export const labPdfUrl = (lab: PracticeLab) => (lab.pdf ? `${import.meta.env.BASE_URL}labs/${lab.pdf}` : null)
+
+/* ── URL hash: #<code>/<cardId> · #<code>/ex/<exampleId> · #<code>/sheet/<key> · #<code>/lab/<n> · #<code> ── */
 
 export function courseSlug(course: Course): string {
   return (course.code || course.id).toLowerCase().replace(/[^a-z0-9-]+/g, '-')
 }
 
-export interface HashState { course: Course; sel: Selection | null; sheet: FormulaSheet | null }
+export interface HashState { course: Course; sel: Selection | null; sheet: FormulaSheet | null; lab: number | null }
 
 export function parseHash(hash: string, courses: Course[]): HashState | null {
   const raw = decodeURIComponent(hash.replace(/^#\/?/, ''))
@@ -54,16 +58,19 @@ export function parseHash(hash: string, courses: Course[]): HashState | null {
   const [slug, a, b] = raw.split('/')
   const course = courses.find(c => courseSlug(c) === slug.toLowerCase() || c.id === slug)
   if (!course) return null
-  if (a === 'sheet' && b) return { course, sel: null, sheet: course.sheets?.find(s => sheetKey(s) === b) ?? null }
-  if (a === 'ex' && b) return { course, sel: { kind: 'example', id: b }, sheet: null }
-  if (a) return { course, sel: { kind: 'card', id: a }, sheet: null }
-  return { course, sel: null, sheet: null }
+  const none = { course, sel: null, sheet: null, lab: null }
+  if (a === 'sheet' && b) return { ...none, sheet: course.sheets?.find(s => sheetKey(s) === b) ?? null }
+  if (a === 'lab' && b) return { ...none, lab: course.labs?.find(l => String(l.number) === b)?.number ?? null }
+  if (a === 'ex' && b) return { ...none, sel: { kind: 'example', id: b } }
+  if (a) return { ...none, sel: { kind: 'card', id: a } }
+  return none
 }
 
-export function formatHash(course: Course, sel: Selection | null, sheet: FormulaSheet | null = null): string {
+/** `lab` is the practice lab on screen (Labs view), used when nothing else is open. */
+export function formatHash(course: Course, sel: Selection | null, sheet: FormulaSheet | null = null, lab: number | null = null): string {
   const slug = courseSlug(course)
   if (sheet) return `#${slug}/sheet/${sheetKey(sheet)}`
-  if (!sel) return `#${slug}`
+  if (!sel) return lab != null ? `#${slug}/lab/${lab}` : `#${slug}`
   return sel.kind === 'example' ? `#${slug}/ex/${encodeURIComponent(sel.id)}` : `#${slug}/${encodeURIComponent(sel.id)}`
 }
 
@@ -115,7 +122,7 @@ function normalise(s: string): string {
     .replace(/\s+/g, ' ')
 }
 
-export type ResultKind = 'card' | 'example' | 'section' | 'course'
+export type ResultKind = 'card' | 'example' | 'lab' | 'section' | 'course'
 
 export interface SearchDoc {
   key: string
@@ -127,6 +134,7 @@ export interface SearchDoc {
   preview: string | null   // LaTeX for the palette preview strip
   sel: Selection | null
   sectionId?: string
+  lab?: { number: number; problemId: string | null }
   t: string                // normalised title
   meta: string             // normalised tag + section + course
   body: string             // normalised notes + latex
@@ -169,11 +177,37 @@ export function buildIndex(courses: Course[]): SearchDoc[] {
         body: normalise(`${ex.given.join(' ')} ${tex} ${ex.answer}`),
       })
     }
+    for (const lab of course.labs ?? []) {
+      const labMeta = normalise(`lab ${lab.number} practice ${lab.title} ${lab.ref} ${courseMeta}`)
+      docs.push({
+        key: `lab:${lab.id}`, kind: 'lab', course, title: `Lab ${lab.number} · ${lab.title}`,
+        context: `Practice set · ${lab.problems.length} problems`, tag: lab.ref, preview: null, sel: null,
+        lab: { number: lab.number, problemId: null },
+        t: normalise(`lab ${lab.number} ${lab.title}`), meta: labMeta, body: normalise(markdownText(`${lab.blurb} ${lab.intro}`)),
+      })
+      for (const p of lab.problems) {
+        const firstMath = p.statement.match(/\$\$?([^$]+)\$/)?.[1]
+        docs.push({
+          key: `lab:${p.id}`, kind: 'lab', course, title: `Lab ${lab.number} ${p.label} · ${plainTex(p.method) || lab.title}`,
+          context: lab.title, tag: lab.ref, preview: firstMath ? `\\textstyle ${firstMath}` : null, sel: null,
+          lab: { number: lab.number, problemId: p.id },
+          t: normalise(`lab ${lab.number} ${p.label} ${p.method}`), meta: labMeta,
+          body: normalise(markdownText(`${p.statement} ${p.solution}`)),
+        })
+      }
+    }
   }
   return docs
 }
 
-const KIND_BONUS: Record<ResultKind, number> = { course: 6, section: 3, card: 2, example: 0 }
+const KIND_BONUS: Record<ResultKind, number> = { course: 6, section: 3, card: 2, example: 0, lab: 0 }
+
+/** "integrating factor $\mu(y) = y^3$" → "integrating factor μ(y) = y^3", for result titles. */
+function plainTex(s: string): string {
+  const greek: Record<string, string> = { mu: 'μ', lambda: 'λ', alpha: 'α', beta: 'β', theta: 'θ', nabla: '∇', delta: 'δ', omega: 'ω' }
+  return s.replace(/\$/g, '').replace(/\\([a-zA-Z]+)/g, (_, w: string) => greek[w] ?? (w === 'cdot' ? '·' : w === 'times' ? '×' : ''))
+    .replace(/\\[,;! ]/g, ' ').replace(/[{}]/g, '').replace(/\s+/g, ' ').trim()
+}
 
 export function search(index: SearchDoc[], query: string, activeCourseId: string | null, limit = 60): SearchDoc[] {
   const terms = normalise(query).split(' ').filter(Boolean)
